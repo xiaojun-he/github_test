@@ -1,0 +1,14 @@
+//建立mms PDN成功
+09-23 21:39:22.910122  1346  1465 D RILJ    : [4025]> SETUP_DATA_CALL,radioTechnology=18,isRoaming=false,allowRoaming=true,DataProfile=1001/nxtgenphone/IPV4V6/0///2/0/0/0/true/65591/IPV4V6/262143/0///false [SUB0]
+09-23 21:39:22.918778   792   852 I AT      : [0] AT> AT+EAPNACT=1,"nxtgenphone","mms",0 (RIL_CMD_READER_4, tid:2809244016)
+09-23 21:39:24.115820  1346  1441 D RILJ    : [4025]< SETUP_DATA_CALL DataCallResponse: { status=0 retry=-1 cid=201 active=2 type=IP ifname=ccmni1 mtu=1280 addresses=[172.22.1.100] dnses=[172.22.1.201] gateways=[172.22.1.100] pcscf=[172.22.1.201]} rat=2 [SUB0]
+
+//从netlog看到，收到了网络给的send-conf PDU，status是ok
+6043    2018-09-24 12:39:27.112284    172.22.1.200    172.22.1.100    MMSE    222    MMS m-send-conf
+Response-Status: Ok (0x80)
+
+//APlog也看到，发送成功
+09-23 21:39:27.138900  4500  5471 V SendTransaction: TctMms-SendTransaction respStatus : 128
+09-23 21:39:27.138900  4500  5471 V SendTransaction: TctMms-SendTransaction respStatus : 128
+09-23 21:39:27.300554  4500  5471 E SendTransaction: TctMms-SendTransaction Delivery SUCCESS.
+09-23 21:39:27.300554  4500  5471 E SendTransaction: TctMms-SendTransaction Delivery SUCCESS.

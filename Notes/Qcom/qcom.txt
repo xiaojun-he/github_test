@@ -1,0 +1,197 @@
+【IMS-settings】
+ims_settings_set 设置vowifi,volte,test mode的状态
+
+【Volte-REG-Flow】
+Keywords:GetRATQuality
+
+1,Attach on LTE
+在Attach request/Pdn connectivity request中告诉网络UE是否支持ims，网络在Attach accept/Activate default bearer中回复p-cscf地址，
+Keywords: voice_domain_pref_for_EUTRAN/Pcscf
+
+2, CM and DS inform IMS DPL regarding service availability.
+Keywords: DS Sys Info
+// DS rat_value = 3(LTE), 1(WCDMA), 5(IWLAN)
+
+3,Device portability layer (DPL) informs all IMS registered clients about the availability of Radio access technology and RM decides if RAT is valid for IMS registration.
+Keywords: EventChangeRat
+// new rat = 10 (LTE), 3 (WCDMA), 9 (eHRPD), 6 (IWLAN)
+RAT mask - 0x400- LTE,0x50- WLAN +IWLAN,0x450- LTE+WLAN+IWLAN
+NV67259 - For LTE the ratValue should include 0x400, for IWLAN, the ratValue should include 0x40
+NV67264 - test mode
+
+4,PM/RM informs DPL about the APN to be used.
+Keywords:GetIMSA
+APNType: 1 for IMS
+iIPType: 2 for IPv6
+NV67264/71527, NV67264 is depreciated in MSM8998/SDM845. No need to modify this NV item.
+andsf.xml and default_andsf.xml
+profile
+
+5,create DCM profile
+Keywords: dcmcreate/DSprofile
+
+6,RM decides if registration is needed using PM
+Keywords: CheckRegistrationNeeded/IsRegParametersReady/initial GetPreferredRAT
+
+7, If PDP is not already active, RM asks DPL for establishing PDP connection.
+Keywords: PdpActivate/qpDcmEstablishPDPConnection/Comparing APN Name/QMI_IMS_DCM_PDP_ACTIVATE_REQ-request ap side to setupdatacall
+如果没有QMI_IMS_DCM_PDP_ACTIVATE_REQ消息，NV70287 Hybrid mode should be set to 1
+
+8,Ds info ims data call activated
+Keywords: EventPdpActivated
+
+9,Get Sip server adress
+Keywords:GetSIPServerAddress
+
+10,RM decides the PCSCF address to be used for registration.
+Keywords:SetDplPcscfAddress/PCSCFListHandler
+
+11,CM domain selection
+Key words:qipcall_aval_domain
+
+12,Add service TAG
+Key words:allowedBy/AddService/[SetState]
+//FT state 1 = featured tags to be added ; FT state 2 = registration in progress ; FT state 3 = FT of this type is registered
+//FT type 0 = SMS ; 1 = ICSI ; 2 = voice ; 3 = video ; 9 = USSD
+
+13,RM gets the parameters needed for registration.
+Keywords:GetPublicUserId/SetImsPriorityConfig/GetPrivateUID
+// Operator mode NV 69673: 0 (VzW), 1(KDDI), 2(IR92), 3(LGU), 4(MPCS),5(ATT), 6 (SKT), 7 (KT), 8(RIL), 9 (TMO), 10(DCM)
+
+14,SIP signaling opens the UDP and TCP ports.
+Keywords:CheckNOpenReqPort
+
+15,Register packet is generated.
+SingoConfig::Set/qpSipAddValHead/SetContactFeatureTags
+
+16,trigger IMS registration
+Key words:ProcessRequest,SendRequestToRegManager
+
+17,begins the IMS registration process with the network
+Key words:RegistrationHandlerVoLTE
+
+18,REGISTER request is constructed and sent OTA by IMS
+Key words:qpSipInitRequest,SendSipMessage,SocketWrite,EVENT_SIP_REQUEST_SEND
+ProtoInet:1->TCP, 2->UDP
+
+19,IMS informs CM about VoLTE call capability and status of IMS
+Key words:ims_update_service_status
+Update service status, 0 = No Service, 2 = Full Servive
+
+【VoWiFi】
+1, Configuration
+a,adb shell setprop persist.data.iwlan.enable true
+b,NV item
+    vowifi-nv-list.png
+    0-np263-1_h_wlan_offload_via_s2b_provisioning.pdf   
+c,modem_proc/mcfg/mcfg_gen/scripts/data/efs_files/XXX/
+
+2,Keywords
+wifi_avail/DSD_WIFI_CONN_STATUS/sending dns/IKEV2/pcscf/event_sip/SIP calling
+Note:wifi-calling only start register while wifi status is DSD_WIFI_CONN_STATUS_IP_CONNECTED
+
+3,Emergency call
+a,emerg_call_cs_only/NV67348
+b,emerg_wifi_call_disable/NV73717
+c,emergency_call_type.png/emer_cat/Emerg serv categ given/Emergency sub category/gw cat
+d,380 Alternative Service
+    NV67257 [VoIPConfigQoS]:compliant network behavior with UE
+    Log:Alternate Handling
+e,cs or ims
+    ac-BarringForEmergency in sib2. ture for cs, false for ims
+f,NV67348 [E911_Call_Timer]
+    Log:Handling emergency Call Origination/emergency call timer expired/EVENT_SIP_REQUEST_SEND:CANCEL/CSFB
+
+    
+4,Registeration call flow
+ a,Wi-Fi available
+    Filter: wifi_avail
+ b,IWLAN available
+    Filter: DS Sys Info
+    rat_value = IWLAN(5), LTE (3), WLAN srv_status: 2 (enable)
+    if rat_value is c9 -> check persist.data.iwlan.enable
+    if iwlan_s2b_usability_mask is 0x123 -> NV70315
+ c,WFC and Wi-Fi preference per UE settings(NV69750)
+    Filter: wfc/callModePref
+    WFC status: 2 = OFF, 1 = ON
+    callmodePreference: 1 = Wi-Fi preferred, 3 = cellular preferred
+ d,DPL informs all IMS registered clients about RAT availability,RM decides if RAT is valid for IMS registration
+    Filter: EventChangeRat
+ e,DPL reports Wi-Fi quality
+    Filter: urrRSSI/CQE Result/iWiFiQual/IsHandOverPossible
+ f,PDP is triggered to be activated on IWLAN.
+    Filter: establishpdp
+ g,ePDG tunnel is established
+    Filter: _IWLAN_S2B_PDN_SM_/IPSEC SA
+ h,RM is informed of successful PDP activation and IP address to be used.
+    Filter: PdpActivated
+ i,The remaining procedure is similar as WWAN explained in volte.txt
+ 
+5,Handover
+	a,Trigger
+		i,RAT change
+			RatMask changed
+		ii,WFC/Call preference change
+			HandleRatNotification
+		iii,Wi-Fi quality change
+			DplHOConvertReportToQuality
+	b,Handover process
+		i,DPL runs a logic to inform if handover is possible.
+			bIsHOPossible/
+			prefsys => //2- WIFI, 0-LTE
+			Current system 1 = LTE, 3 = IWLAN
+			qpDplProcessNetChangeEvent - Received 23 Event //22- INIT, 23- HO success, 24- failure
+			EventChangeRat
+		ii,registraion on new rat
+ 
+
+ 
+【注网】 开机上电 -> 初始化(SIM卡识别和搜网相关NV)　-> 搜索PLMN -> 扫频　-> 搜索小区 -> 系统计算 -> 选择小区 -> 驻留小区 -> Attach -> RRC Conncetion -> 随机接入 -> RRC connection finish-> Attach finish
+   a, find plmn -> MMR_REG_REQ
+   b, find cell -> EVENT_GSM_CELL_SELECTION_START/EVENT_GSM_CELL_SELECTION_END
+   c, check singal -> RX Power = -100.88 dBm
+   
+【ss/ussd】
+qmi_voice_cm_if.c -> cm.c cm_cmd_queue -> cmtast.c -> cmwsups.c -> cmipsups.c cmipsups_route_check
+PR4321427
+QMI_VOICE_GET_CALL_FORWARDING
+QMI_VOICE_SET_SUPS_SERVICE
+//SS request via IMS 
+MSG [00005/02] Call Manager/High 02:29:37.391 cmdbg.c 03425 =CM= CMD alloc u=428, tsk=qmi_mmode 
+MSG [00005/01] Call Manager/Medium 02:29:37.404 cmipsups.c 00148 =CM= cmipsups_route: cmd=4 
+MSG [00005/02] Call Manager/High 02:29:37.404 cmipapp.c 06206 =CM= Found ICS app 1 
+MSG [00005/02] Call Manager/High 02:29:37.404 cmwsups.c 01651 =CM= sups_cmd=4, route=0 
+MSG [00005/01] Call Manager/Medium 02:29:37.404 cmipapp.c 06157 =CM= CM->IMS: CMIPAPP: Send PS sups cmd, type=4,app_id 1,as_id 0 
+
+//err report to CM 
+MSG [00005/02] Call Manager/High 02:30:37.427 cmtask.c 10827 =CM= CM<< IP cmd:625 
+MSG [00005/01] Call Manager/Medium 02:30:37.427 cmipcall.c 03887 =CM= Unkwn report from IP app 625 
+MSG [00005/01] Call Manager/Medium 02:30:37.427 cmipsups.c 01411 =CM= intg_cnf, type 15, err_present 1, tag 2, code 34 
+MSG [00005/02] Call Manager/High 02:30:37.427 cmipsups.c 00635 =CM= cmipsups_interrogate_conf_proc: retry duration: 0 , error code: 34, error tag : 2 
+
+【ss over ims】
+a,qmi -> cm  QMI_VOICE_SET_SUPS_SERVICE
+b,cm -> ims =CM= >>CM supscmd/=CM= sups_cmd=
+c,IMS receive the SS command from CM qpDplCallCtrl.c/IMSSupplementaryService.cpp
+d,IMS call UT interface. /UTCommunicationDiversion.cpp
+e,ims --> nw QimfHttp.cpp
+f,nw -> ims QimfHttp.cpp/UTCommunicationDiversion.cpp
+g,ims -> cm IMSSupplementaryService.cpp/qpDplCallCtrl.c
+h,cm -> qmi QMI_VOICE_SET_SUPS_SERVICE
+
+【RAT masks】
+epdg_modem_data_overview.pdf page-17
+
+【decode esp】
+The following ADB commands are used to capture ePDG tunnel keys:
+adb shell date >> ip_xfrm_state_dump
+adb shell ip xfrm state >> ip_xfrm_state_dump
+adb shell ip xfrm policy >> ip_xfrm_state_dump
+
+【sms on ims】
+a,wms_raw_send
+b,qpOriginateSmsCb/NV66472
+c,IMS SIP signalling
+d,Wireless Messaging Services
+
+

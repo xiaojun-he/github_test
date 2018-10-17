@@ -1,0 +1,30 @@
+Modem:
+ NIL [AT_U p19, s8]+ECSQ: 15,35,1,-421,-27,1,1,6,32767,-1 
+ IMC - IMSP MSG_ID_IMSP_IMC_HANDOVER_START_IND
+ VDM_ADS [VDM ADS] Service status: IMS handover status = IMS_HANDOVER_STATUS_WIFI_TO_LTE
+adb log:
+RIL-NW  : rssi
+i43grscp<-106> = -106
+
+
+ril_oem.c
+  --> updateSignalStrength
+  --> getSingnalStrength
+  --> ril_nw.c
+      --> getSingnalStrength
+      --> convert3GRssiValue
+  --> RIL_UNSOL_RESPONSE
+  
+ril.cpp
+  --> RIL_onUnsolicitedResponse
+  --> responseRilSignalStrength //将对应的值写入，
+  --> sendResponse // 将上面的Parcel传给RILJ
+
+
+Ril.java
+  --> RIL_UNSOL_SIGNAL_STRENGTH
+  --> mSignalStrengthRegistrant.notifyRegistrant
+  
+ServiceStateTracker.java
+  --> EVENT_SIGNAL_STRENGTH_UPDATE
+  --> onSignalStrengthResult

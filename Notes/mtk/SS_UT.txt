@@ -1,0 +1,88 @@
+imsphone.java
+setCallForwardingOption -> ut.updateCallForward
+
+imsUT.java
+miUt.updateCallForward
+
+imsUTStub.java
+mMMTelSSTSL.setCallForward
+
+MMTelSSTransport.java
+send(rr) -> MMTelSSTransmitter handleMessage() -> handleSetCF()
+1,是否需要CSFB?yes -> csfb到CS;no -> 继续2以后的动作
+  a,updateNetworkInitSimServ -> requestXcapNetwork -> acquireNetwork
+2,getCache
+  a,SimServs.java -> getCommunicationDiversion -> cd.loadConfiguration
+  b,SimservType.java -> loadConfiguration -> getContent() Get string from remote XCAP server
+3,在resultList中添加新的规则，通过cd.saveRule保存结果
+  a,CommunicationDiversion.java saveRule()
+  b,Rule.java setContent()
+  c,XcapElement.java saveContent() -> xcapClient.put
+  d,XcapClient.java execute() ->  out.write(xml)
+
+
+Log Example:
+AT> AT+ECUSD/MMTelSS/XcapMobileDataNetworkManager/XcapClient/XcapElement/ImsPhoneMmiCode
+07-07 02:12:07.576566 1705 6326 D MMTelSS : initAuthentication: xcapRoot=http://xcap.private.att.net/, phoneId=0, network=103 
+07-07 02:12:07.582992 1705 6326 D MMTelSS : handleGetCW() GET_CW, serviceClass=Voice, phoneId=0 
+07-07 02:12:08.127122 1705 6326 D XcapClient: HTTP: 200 OK  
+07-07 02:12:08.129735 1705 6326 D XcapElement: Response XML:<?xml version="1.0" encoding="UTF-8"?><ss:communication-waiting active="true"></ss:communication-waiting> 
+07-07 02:12:08.188269 1693 1693 V ascii : text.toString() is: Call waiting 
+07-07 02:12:08.188269 1693 1693 V ascii : Service was enabled for: 
+07-07 02:12:08.188269 1693 1693 V ascii : Voice 
+07-07 02:12:08.165437 1705 6326 D MMTelSS : handleGetCW(): isActive = 1  
+07-07 02:12:08.165476 1705 6326 D MMTelSS : handleGetCW(): service=Voice
+
+
+93 Modem:
+1.SSDS logic:
+UMOLYA/mcu/pcore/modem/ssds
+2.客制化:
+UMOLYA/mcu/pcore/custom/modem/common/ps/customer_ssds*
+UMOLYA/mcu/pore/custom/service/naram/ssds_naram_def.c
+
+3.Related modules
+ATP/CCCITTY/CCISMCORE/D2CM/IMSM/SIMMNGR/SSDS/XCAP_CCCI
+
+4,Customization
+custom_ssds.c
+
+5,Basic flow
+a, Receive ATCMD
+[AT_RX p38,ch5]AT+ECUSD=1,1,"*#62#"
+MSG_ID_ATP_SSDS_SS_ATCMD_REQ
+	ss_type = ATP_SSDS_ATCMD_TYPE_CALL_FORWARDING_QUERY (enum 14)
+	
+b,
+MSG_ID_D2AM_MDALLOW_REQ
+	action = D2AM_MDALLOW_ACTION_BOOK (enum 0)
+	user = D2AM_MDALLOW_USER_XCAP (enum 1)
+
+c,
+MSG_ID_D2CM_GET_PDN_PROFILE_REQ
+MSG_ID_D2CM_ACT_DATA_CALL_REQ
+MSG_ID_SIMMNGR_SIM_AKA_REQ
+MSG_ID_D2CM_ACT_DATA_CALL_CNF
+
+d,
+MSG_ID_IMSM_SET_ROUTE_DNS_REQ
+MSG_ID_IMSM_SET_ROUTE_DNS_CNF
+
+e, Send ATCMD to XCAP
+MSG_ID_ATP_SSDS_SS_ATCMD_REQ
+
+f, Request/Response SIM Information
+MSG_ID_SIMMNGR_QUERY_SIM_INFO_REQ
+MSG_ID_SIMMNGR_QUERY_SIM_INFO_CNF
+
+
+g, XCAP response to SSDS
+MSG_ID_ATP_SSDS_SS_ATCMD_CNF
+	result = PROXY_CMD_FAIL (enum 0)
+	error_code = 0x000000c8
+	
+h, Deact
+_DEACT_DATA_CALL_
+
+
+6,CSFB

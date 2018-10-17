@@ -1,0 +1,34 @@
+    1. 首先确认是否在plftoraw.java中正确添加了处理对应system property的相关逻辑，如果没有，可以参考其他nvram定制添加；
+    2. 如果添加了第一步中的相关代码，就需要检查nv_perso_data_structure.xml中是否正确定义了需要定制的nvram的相关信息，下 面举个例子说明：
+        <SIMPLE_VAR>
+        <SDMID>AMRWB.GSM.supported.for.perso</SDMID>
+        <ORIG_LID>159</ORIG_LID>
+        <ORIG_SIZE>12</ORIG_SIZE>
+        <RECORD_INDEX>1</RECORD_INDEX>
+        <RECORD_AMOUNT>1</RECORD_AMOUNT>
+        <OFFSET>1</OFFSET>
+        <DATA_SIZE>1</DATA_SIZE>
+        <DATA_0>"0x00"</DATA_0>
+        </SIMPLE_VAR>
+
+上面的这个定制的nv包括了LID，SIZE，INDEX，AMOUNT，OFFSET，DATA_SIZE，DATA_0几个元素，这些都必须 和modem中的nvram结构体匹配才能定制成功。
+LID，一般我们要定制某个NVRAM都会先咨询MTK，也可以通过编译modem 生成~nvram_lid_information.log 通过NV的名字查询到LID；
+SIZE，可以在modem编译之后生成的~nvram_lid_size.log中查询到，上面已经知道了LID，那根据LID就可 以查询到对应的SIZE，也可以直接使用metal工具读取该NV去查看大小；
+INDEX，这个主要决定单双卡，如果是单卡或者卡1，那么就是1，卡2就是2，以此类推。
+AMOUNT，使用metal工具查看该NV下有几个数据。
+OFFSET，需要去找到需要定制的NVRAM的字段在这个NVRAM的结构体里面的偏移量，单位是一个byte，也就是使用metal工具查看需要修改该nv的第几位
+DATA_SIZE，定制的字段的大小，单位也是byte，也就是上面说的该NV的第几位的大小
+DATA_0，定制的字段的例子，也就是实际写到nvram里面的数据，但是不会实际写这里的值，这个东西不重要，这个也就是该NV项的第几位中的数据
+
+
+
+1,Build modem
+
+2,查看lid id
+/modem/mcu/build/TK_MD_L4/LWCTG_R3_6739/nvram_auto_gen/~nvram_lid_information.log
+
+3,SIZE
+/modem/mcu/build/TK_MD_L4/LWCTG_R3_6739/nvram_auto_gen/~nvram_lid_size.log
+
+4,[FAQ20290] [NVRAM]Modem1 NVRAM基础知识总结
+	path:vendor/vndata/md/nvram

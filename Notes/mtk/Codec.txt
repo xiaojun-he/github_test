@@ -1,0 +1,66 @@
+[FAQ14980] 如何打开GSM AMR-WB
+[FAQ18096] IMS Call如何设置AMR-NB Only和AMR-WB Only
+[FAQ16720] [Speech]如何查看AMR，AWB语音编码速率
+[FAQ03932] [Audio Driver]如何打开/关闭3G通话时对AMR-WB的支持
+[FAQ20688] 93 modem如何打开GSM AMR-WB
+[FAQ14155] AMR、AMR-WB支持的编码速率
+
+EVS-NB：  5.9kbps 7.2kbps 8.0kbps 9.6kbps 13.2kbps 16.4kbps 24.4kbps  
+EVS-WB：  5.9kbps 7.2kbps 8.0kbps 9.6kbps 13.2kbps 16.4kbps 24.4kbps 32.0kbps 48.0kbps 64.0kbps 96.0kbps 128.0kbps
+
+4.750
+5.151
+5.92
+6.73
+7.44
+7.955
+10.26
+12.27----NB的mode 7
+
+
+2 (AMR_WB)
+1 (AMR_NB)
+17 EVS
+
+UA_call_codec_order1 = 17; 
+UA_call_codec_order2 = 2; 
+UA_call_codec_order3 = 1;
+优先级：1 > 2 > 3
+
+modem Log:
+audio_codec=2 clock_rate=1, mode=24
+// audio_codec为编码类型，2 for AMR_WB; mode为编码速率，对应关系如下
+
+typedef enum
+{
+AMR_FRAME_4_75 = 0,
+AMR_FRAME_5_15,
+AMR_FRAME_5_90,
+AMR_FRAME_6_70,
+AMR_FRAME_7_40,
+AMR_FRAME_7_95,
+AMR_FRAME_10_2,
+AMR_FRAME_12_2,
+AMR_FRAME_SID,
+AMR_FRAME_GSM_EFR_SID,
+AMR_FRAME_TDMA_EFR_SID,
+AMR_FRAME_PDC_EFR_SID,
+RFU_AMR_FRAME_TYPE_12, //reserved for future use
+RFU_AMR_FRAME_TYPE_13, //reserved for future use
+RFU_AMR_FRAME_TYPE_14, //reserved for future use
+AMR_FRAME_NO_DATA = 15,
+#ifdef AMRWB_LINK_SUPPORT 
+AMRWB_FRAME_6_60,
+AMRWB_FRAME_8_85,
+AMRWB_FRAME_12_65,
+AMRWB_FRAME_14_25,
+AMRWB_FRAME_15_85,
+AMRWB_FRAME_18_25,
+AMRWB_FRAME_19_85,
+AMRWB_FRAME_23_05,
+AMRWB_FRAME_23_85,
+AMRWB_FRAME_SID,
+#endif /*AMRWB_LINK_SUPPORT */
+MAX_NO_OF_FRAME_TYPE, // 25
+AMR_FRAME_TYPE_ALL_BARRED = 31
+}tAMRWB_FrameType;

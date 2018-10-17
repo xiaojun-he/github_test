@@ -1,0 +1,22 @@
+ImsCallSessionProxy.java
+    -->notifyCallSessionTerminated
+    mListener.callSessionStartFailed()
+ImsCall.java
+    -->callSessionStartFailed
+    listener.onCallStartFailed(ImsCall.this, reasonInfo);
+ImsPhoneCallTracker.java
+    -->onCallStartFailed
+    -->processCallStateChange
+    -->conn.onDisconnect
+ImsPhoneConnection.java
+    -->onDisconnect
+    -->notifyDisconnect
+ImsPhoneBase.java
+    -->mDisconnectRegistrants.notifyResult
+TelephonyConnection.java
+    -->MSG_DISCONNECT
+    -->updateState
+    -->updateStateInternal
+    -->DisconnectCauseUtil.toTelecomDisconnectCaus
+DisconnectCauseUtil.java
+    -->toTelecomDisconnectCaus

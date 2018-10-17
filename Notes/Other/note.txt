@@ -1,0 +1,225 @@
+blacklist call:
+CallsManager.java onSuccessfulIncomingCall --> isCallBlacklisted --> TelephonyManager.java endCall
+PhoneInterfaceManager.java -> CMD_END_CALL -> PhoneUtils.hangup(mCM);
+
+get contact number from call:
+private String getLogNumber(Call call) {
+    Uri handle = call.getOriginalHandle();
+    if (handle == null) {
+        return null;
+    }
+    String handleString = handle.getSchemeSpecificPart();
+    if (!PhoneNumberUtils.isUriNumber(handleString)) {
+        handleString = PhoneNumberUtils.stripSeparators(handleString);
+    }
+    return handleString;
+}
+
+get current language
+private boolean isEnglish() {
+    Locale locale = mPrefActivity.getResources().getConfiguration().locale;
+    String language = locale.getLanguage();
+    Log.d("hhhh","language = "+language);
+    if (language.endsWith("en"))
+        return true;
+    else
+        return false;
+}
+
+kernel log:
+adb shell cat /proc/kmsg > 1.txt
+
+烧录软件时，提示 can not switch to 9008
+解决方法：###2324#，显示off就ok。如果还不行，检查是否开启了QXDM，这个端口会有冲突。
+
+CFU notification 过程：
+GSMPhone.java ---> EVENT_ICC_RECORD_EVENTS ---> processIccRecordEvents ---> notifyCallForwardingIndicator
+DefaultPhoneNotifier.java notifyCallForwardingChanged ---> notifyCallForwardingChangedForSubscriber //掉哦那个getCallForwardingIndicator函数判定是否有callforward，它是通过setVoiceCallForwardingFlag 来设置的
+TelephonyRegistry.java  notifyCallForwardingChangedForSubscriber
+CallNotifier.java onCallForwardingIndicatorChanged 
+NotificationMgr.java --> updateCfi
+
+
+
+notification中按钮功能：
+Intent intent = new Intent(action, null, context, NotificationBroadcastReceiver.class);
+intent = PendingIntent.getBroadcast(context, 0, intent, 0);
+builder.addAction(int icon, CharSequence title, PendingIntent intent)
+
+voicemail:
+mSubscriptionInfoHelper = new SubscriptionInfoHelper(this, getIntent());
+mPhone = mSubscriptionInfoHelper.getPhone();
+mSubId = mSubscriptionInfoHelper.getSubId();
+mPhone.getVoiceMailNumber()
+mPhone.setVoiceMailNumber()
+
+IccRecords.java --> SIMRecords.java
+
+onRecordLoaded --> onAllRecordsLoaded --> setVoiceMailByCountry
+mIsVoiceMailFixed 表示运营商不允许修改
+
+phoneid,slotid,subid
+SubscriptionController.java 具体实现
+1.
+PhoneGlobal.java onCreate() --> TelephonyPluginDelegate.init(this);
+PhoneFactory.java makeDefaultPhone() --> sSubInfoRecordUpdater = TelephonyPluginDelegate.getInstance().makeSubscriptionInfoUpdater(context, sProxyPhones, sCommandsInterfaces);
+TelephonyPluginBase.java makeSubscriptionInfoUpdater() --> new SubscriptionInfoUpdater
+SubscriptionInfoUpdater.java 构造函数注册监听 sReceiver --> EVENT_SIM_LOCKED_QUERY_ICCID_DONE/EVENT_SIM_ABSENT/EVENT_SIM_LOADED --> updateSubscriptionInfoByIccId()
+SubscriptionManager.java addSubscriptionInfoRecord()
+SubscriptionController.java addSubInfoRecord() --> 构建 id的map：sSlotIdxToSubId
+
+2.
+PhoneFactory.java makeDefaultPhone() --> TelephonyPluginDelegate.getInstance().initExtTelephonyClasses(context, sProxyPhones, sCommandsInterfaces);
+TelephonyPluginDelegate.java initExtTelephonyClasses
+QtiTelephonyPlugin.java initExtTelephonyClasses() 调用init函数，从而new出ExtTelephonyServiceImpl对象
+ExtTelephonyServiceImpl.java 构造函数中构建UiccCardProvisioner 对象
+
+UiccCardProvisioner.java 构造函数注册事件监听 EVENT_UNSOL_MANUAL_PROVISION_STATUS_CHANGED/EVENT_OEM_HOOK_SERVICE_READY/EVENT_ICC_CHANGED --> queryUiccProvisionInfo() --> QtiSubscriptionInfoUpdater.getInstance().addSubInfoRecord(phoneId, iccId) --> 
+QtiSubscriptionInfoUpdater.java handleAddSubInfoRecordEvent() --> updateSubscriptionInfoByIccId -->super.updateSubscriptionInfoByIccId() --> super.updateSubscriptionInfoByIccId() --> updateSubscriptionInfoByIccId
+
+reset phone:
+<receiver android:name="com.tct.phone.PhoneResetReceiver">
+    <intent-filter  android:priority="96">
+        <action android:name="android.intent.action.LAUNCH_DEVICE_RESET" />
+    </intent-filter>
+</receiver>
+
+获取当前日期：
+Date date = new Date();
+SimpleDateFormat formatter = new SimpleDateFormat ("yyyy/MM/dd");
+formatter.format(date);
+
+读写文件
+File calltimecount = new File("/tct_persist/calltimesaver");
+if (!calltimecount.exists()) {
+    Log.i(TAG, "saveCallDuration create file!");
+    calltimecount.createNewFile();
+}
+
+FileInputStream in = new FileInputStream(calltimecount);
+StringBuffer sb = new StringBuffer();
+int ch = 0;
+Log.i(TAG, "saveCallDuration read pre data!");
+while ((ch = in.read()) != -1) {
+    sb.append((char) ch);
+}
+in.close();
+
+FileOutputStream outStream = new FileOutputStream(calltimecount);
+outStream.write(writeString.getBytes());
+outStream.close();
+
+监听setting值的变化
+final private ContentObserver mMobileDataObserver = new ContentObserver(new Handler()) {
+    @Override
+    public void onChange(boolean selfChange) {
+        if (android.provider.Settings.Global.getInt(mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.Global.MOBILE_DATA, 0) == 0) {
+            if (mButtonInternationalDataRoaming != null) {
+                mButtonInternationalDataRoaming.setEnabled(false);
+            }
+        } else {
+            if (mButtonInternationalDataRoaming != null) {
+                mButtonInternationalDataRoaming.setEnabled(true);
+            }
+        }
+    }
+};
+    
+mPhone.getContext().getContentResolver().registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.MOBILE_DATA),
+                true,
+                mMobileDataObserver);
+                
+mPhone.getContext().getContentResolver().unregisterContentObserver(mMobileDataObserver);
+
+
+如何在menu中添加菜单
+1.使用whereis找到要添加命令的路径
+  whereis gitk
+  结果：/usr/bin/gitk
+2. cp /usr/bin/gitk ~/.gnome2/nautilus-scripts
+
+
+如何测试voicemain等
+
+http://172.26.2.26:8800/，
+并选择Send Voice Mail Notification,号码就是测试手机号码，下面就有选项是发送voice mail 或者Fax/E-mail/Video/Other等，选择后点击Submit 就行。
+
+
+
+根据uri查询数据库
+QueryHandler(context).startQuery();
+private class QueryHandler extends AsyncQueryHandler {
+    public QueryHandler(Context context) {
+        super(context.getContentResolver());
+    }
+    ......
+    实现onQueryComplete等函数
+}
+
+
+获取sim卡id
+mSubscriptionInfoHelper = new SubscriptionInfoHelper(Context context, Intent intent)// (this, getIntent());
+mSubId = subscriptionInfoHelper.getSubId()
+SubscriptionManager.getPhoneId(mSubId)
+
+获取sim卡的mccmnc
+simNumeric = SystemProperties.get(TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, "");
+                        TelephonyManager.getDefault().getSimOperator(phone.getSubId());
+String mccmncnumber =   TelephonyManager.getDefault().getSimOperatorNumericForSubscription(mSubscription);
+或者
+String simNumeric = ((TelephonyManager) mPhone.getContext().
+    getSystemService(Context.TELEPHONY_SERVICE)).
+    getSimOperatorNumericForPhone(mPhone.getPhoneId());
+ 运营商的mccmnc
+String operatorNumeric = mPhone.getServiceState().getOperatorNumeric();
+
+
+public String getCountryCode(){
+    PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+    int num = phoneNumberUtil.getCountryCodeForRegion(tm.getSimCountryIso().toUpperCase());
+    return  Integer.toString(num); 
+}
+
+
+
+PLMN(public land mobile network) 当前注册网络的名称
+更新条件：
+setRoamingOverride/EVENT_SIM_READY/EVENT_RADIO_STATE_CHANGED/EVENT_NETWORK_STATE_CHANGED
+
+SPN(Service Provider Name) simrecord.java
+
+SPN 和 PLMN显示规则:
+1、名称可以为SPN或PLMN
+2、如果没有SPN文件，那么就显示PLMN
+3、若有SPN，并且注册的PLMN是HPLMN或者注册的PLMN在SIM卡文件EF_SPDI中，那么：
+    (1)如果有SPN就要显示SPN
+    (2)如果SPN的bit1 = 1, 则需要同时显示PLMN，如果SPN的bit1=0，则不需要同时显示PLMN
+4、若有SPN，注册的PLMN是Roaming PLMN且注册的PLMN也不在SIM卡文件EF_SPDI中，那么
+    (1)显示PLMN
+    (2)如果SPN的bit2=0，则需要同时显示SPN，如果SPN的bit2=1，则不需要同时显示SPN
+GsmServiceStateTracker.java  updateSpnDisplay()
+
+
+
+
+
+
+获取当前activity名称
+private String getCurrentActivityName(Context context) {  
+  ActivityManager am = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);  
+
+  // get the info from the currently running task  
+  List<ActivityManager.RunningTaskInfo> taskInfo = am.getRunningTasks(1);  
+
+  ComponentName componentInfo = taskInfo.get(0).topActivity;  
+  return componentInfo.getClassName();  
+}  
+
+
+
+call number
+InCallService.java　处理MSG_ADD_CALL／MSG_UPDATE_CALL事件，进入Phone.java  internalAddCall/internalUpdateCall 传递parcelableCall　到internalUpdate函数中，从而构建Details类，
+
+ContactInfoCache.java　findInfo函数中调用CallerInfoUtils.getCallerInfoForCall构建callerInfo，在构建callerInfo过程中，通过Details获取号码

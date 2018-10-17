@@ -1,0 +1,44 @@
+5082067
+1, ril.java 
+    --> EVENT_CALL_INFO_INDICATION
+    --> RIL_UNSOL_RESPONSE_CALL_STATE_CHANGED
+2, BaseCommands.java 
+    -> registerForCallStateChanged
+3, GsmCdmaCallTracker.java 
+    -> mCi.registerForCallStateChanged(this, EVENT_CALL_STATE_CHANGE, null) 
+    -> pollCallsWhenSafe
+    -> EVENT_POLL_CALLS_RESULT
+    -> handlePollCalls
+4, GsmCdmaConnection.java
+    ->onDisconnect // set disconnect code
+    
+5，GsmCdmaPhone.java
+    ->notifyDisconnect
+a,
+    ->mNotifier.notifyDisconnectCause
+    -> notifyDisconnectCause
+    -> onPreciseCallStateChanged
+b,
+    -> mDisconnectRegistrants
+    -> registerForDisconnect
+TelephonyConnection.java
+    -> MSG_DISCONNECT
+    -> updateState
+    -> updateStateInternal
+    ->setDisconnected
+    -> l.onDisconnected
+ConnectionService.java
+    ->mConnectionListener
+    -> onDisconnected
+    -> mAdapter.setDisconnected
+ConnectionServiceWrapper.java
+    -> setDisconnected
+    -> mCallsManager.markCallAsDisconnected
+CallsManager.java
+    -> setCallState
+    -> listener.onCallStateChanged
+    -> Calllogmanager.java and so on
+
+
+log:
+disconnected set explicitly> DisconnectCause

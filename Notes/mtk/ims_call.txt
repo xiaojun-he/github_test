@@ -1,0 +1,16 @@
+ImsPhoneCallTracker.java
+调用makeCall,将ImsCall.Listener传递给imsManager
+
+imsmanager.java
+1,将ImsCall.Listener通过call.setListener(listener)传递给 imscall.java中的makeCall.
+2,通过调用createCallSession创建imscallsessionproxy
+3,调用call.start
+
+ImsCall.java
+在Start函数中调用session.setListener，将 ImsCallSession.Listener传递给 ImsCallSession。并在ImsCallSession.Listener的实现类ImsCallSessionListenerProxy中调用通过setListener传递下来的ImsCall.Listener中的函数
+
+ImsCallSession.java
+在构造函数中ImsCallSession通过iSession.setListener将IImsCallSessionListenerProxy传递给 ImsCallSessionProxy,并在其中调用ImsCallSession.Listener的函数
+
+ImsCallSessionProxy.java
+在handleMessage中调用对应的函数

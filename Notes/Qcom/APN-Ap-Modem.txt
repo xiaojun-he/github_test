@@ -1,0 +1,37 @@
+apn分为ap侧和modem侧：
+   ap侧修改apns-conf.xml文件
+   modem侧修改，使用AT命令
+   at$qcprfmod=pid:4,OVRRIDEHOPDP:"IPV6"
+   查询修改：at$qcprfmod?//
+   查询apn：at+cgdcont?（可以知道pid是多少）
+   at+cgdcont=***
+   以上两个AT command 都是修改data/data_Profiles/Profile1 中的字段，只是修改的字段不一样。
+   具体来说： at+cgdcont 可以修改的是0x11字段，at$qcprfmod修改的0x46字段
+   该prifile文件的定义在ds_profile_3gpp_modem.c的头文件ds_profile_db.h文件中：(ds_3gpp_pdn_context.c pdn描述的文件)
+      TECH_3GPP_PROFILE_PARAM_MIN                          = 0x10,
+	  TECH_3GPP_PROFILE_PARAM_PDP_CONTEXT_PDP_TYPE         = 0x1 + TECH_3GPP_PROFILE_PARAM_MIN,
+       /**< PDP context type. */
+      TECH_3GPP_PROFILE_PARAM_OVERRIDE_HOME_PDP_TYPE       = 0x36 + TECH_3GPP_PROFILE_PARAM_MIN,
+       /**< PDN Type override for home PDP type*/
+	   在该文件中也有对各个值的定义，例如对PDP context type的定义：
+	       typedef enum
+        {
+           DB_3GPP_IP     = 0,          /**< PDP type IP. */
+           DB_3GPP_IPV4   = 0,                  /**< PDP type IPv4. */
+           DB_3GPP_PPP    = 1,                       /**< PDP type PPP. */
+           DB_3GPP_IPV6   = 2,                      /**< PDP type IPv6. */
+           DB_3GPP_IPV4V6 = 3,                    /**< PDP type IPv4v6. */
+           DB_3GPP_IP_MAX = 0xff
+         } ds_profile_db_3gpp_pdp_protocol ;
+         
+         
+         
+ds_3gpp_profile_api.c
+ds_3gpp_profile_create_hdlr/ds_3gpp_profile_modify_hdlr/ds_3gpp_profile_power_up_hdlr 
+
+ds_profile_3gpp_modem.c
+dsi_profile_3gpp_modem_write_ident_info -> ds_profile_3gpp_fn_tbl[ident_index].write_fn进入对应的处理函数
+
+以TECH_3GPP_PROFILE_PARAM_OVERRIDE_HOME_PDP_TYPE为列
+s_3gpp_profile_cache_hdlr.c
+ds_3gpp_profile_cache_write_override_home_pdp_type

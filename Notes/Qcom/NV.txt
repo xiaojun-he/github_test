@@ -1,0 +1,87 @@
+NV69744  -> 80-n9839-1_g
+IMS SIP Configuration Parameter /nv/item_files/ims/qp_ims_sip_extended_0_config IMS
+
+NV67259  -> 80-n9839-1_g
+PhoneContextURI
+phone context URI: The phone context URI is the domain name with a default value of vzims.com
+
+NV67257  -> 80-n9839-1_g
+voipConfigConfURI
+conference server URI: The conference server URI is a SIP URI with a default value of sip:confserver@vzims.com
+VoIPConfigQoS
+
+NV67259
+Rat valid
+RatMaskValue and smsRATMaskString, the valid Rat should be included in this NV.
+For LTE the ratValue should include 0x400, for IWLAN, the ratValue should include 0x40. So if
+to support VoWiFi and VoLTE the prefer RatValue is: 0x440
+
+NV71257 
+After got the rat indication from DS, IMS will read NV71257 IMS policy manager to get the IMS profile info, and check the DS profiles. If found the matched APN is in DS profiles, will got
+below message:
+07:28:56.644  PDPRATHandlerVoLTE.cpp 672 H InitPDP - DCM create Profile Succeeded
+
+NV71527
+For VOLTE, the RAT in NV71527 shall be 16. For VoWiFi, the RAT shall be 256. If support both, shall be 272.
+ims_rat_apn_info[x].iIMSServiceInfo and iIMSServiceStatus are bit array. The 3 low bits are for VOTLE/VT/SMS
+
+NV70287
+For Android M and later, and VoWiFI,ViLTE, the NV70287 Hybrid mode should be set to 1.
+
+NV67264
+Reg Event package is added if 67264 = qp_ims_reg_config = RegEventPacket = 1 (enabled)
+
+NV65964 -> /nv/item_files/ims/qipcall_enable_hd_voice
+1=AMR-WB
+0=AMR-NB 
+
+NV66031 -> AMR-NB
+0 = AMR 4.75 kpbs
+1 = AMR 5.15 kpbs
+2 = AMR 5.90 kpbs
+3 = AMR 6.70 kpbs
+4 = AMR 7.40 kpbs
+5 = AMR 7.95 kpbs
+6 = AMR 10.20 kpbs
+7 = AMR 12.10 kpbs
+
+NV67239 -> AMR-WB
+0 = AMR-WB 6.60 kbps
+1 = AMR-WB 8.85 kbps
+2 = AMR-WB 12.65 kbps
+3 = AMR-WB 14.25 kbps
+4 = AMR-WB 15.85 kbps
+5 = AMR-WB 18.25 kbps
+6 = AMR-WB 19.85 kbps
+7 = AMR-WB 23.05 kbps
+8 = AMR-WB 23.85 kbps
+
+NV67280
+ringing timer(in milliseconds)
+
+NV67281 (in milliseconds)
+IMS starts the ringback timer
+
+NV65957
+qipcall_precondition_enable is used to enable/disable the precondition
+
+NV71572
+qipcall_qos_reservation_timer = 2000 msec
+
+NV70213
+[qipcall_signal_strength_threshold ] in dBm
+
+NV69673
+Optional based on IMS operation mode
+
+NV69744  
+/nv/item_files/ims/qp_ims_sip_extended_0_config IMSIsSipInstanceNeeded=1
+
+NV66472
+sms_domain_pref
+
+NV67348
+E911_Call_Timer
+
+NV70315
+WLAN offload enable -> 2

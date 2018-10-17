@@ -1,0 +1,25 @@
+监听注册
+ImsPhoneCallTracker.java
+    --> ImsPhoneCallTracker
+    --> getImsService
+    --> mImsManager.open(,,mImsConnectionStateListener)
+ImsMananger.java
+    --> open
+ImsService.java
+    --> mImsService.open(,,listner)
+    --> onSetRegistrationListener
+    
+    
+消息响应
+RIL_UNSOL_IMS_REGISTRATION_INFO
+
+ImsService.java
+    --> EVENT_IMS_REGISTRATION_INFO (+CIREGU)
+    --> notifyRegistrationStateChange
+    --> mListener.registrationConnectedWithRadioTech/registrationDisconnected
+ImsManager.java
+    --> registrationConnectedWithRadioTech
+    --> mListener.onImsConnected()
+ImsPhoneCallTracker.java
+    --> mImsConnectionStateListener->onImsConnected()
+

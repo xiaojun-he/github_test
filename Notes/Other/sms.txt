@@ -1,0 +1,21 @@
+1,ril_service.cpp
+->newSmsInd
+
+2，RadioIndication.java
+-> newSms 调用mRil.mGsmSmsRegistrant.notifyRegistran进入注册了对应消息的handler
+如：GsmInboundSmsHandler.java 中 phone.mCi.setOnNewGsmSms(getHandler(), EVENT_NEW_SMS, null);
+
+3，进入InboundSmsHandler.java中的DeliveringState状态下的processMessage方法
+-> handleNewSms -> dispatchMessage -> dispatchMessageRadioSpecific
+
+4,GsmInboundSmsHandler.java
+-> dispatchNormalMessage -> addTrackerToRawTableAndSendMessage -> 发送EVENT_BROADCAST_SMS消息
+
+5，进入InboundSmsHandler.java中的DeliveringState状态下的processMessage方法
+-> processMessagePart -> 根据destPort的值判断是否走wap push
+    A,Wap Push
+        i:调用mWapPush.dispatchWapPdu进入WapPushOverSms.java
+        ii:创建WAP_PUSH_DELIVER_ACTION intent,调用handler.dispatchIntent进入InboundSmsHandler.java并发送广播
+        iii:在InboundSmsHandler.java的SmsBroadcastReceiver类中处理WAP_PUSH_DELIVER_ACTION广播，将action修改为WAP_PUSH_RECEIVED_ACTION并发送
+        iiii:在ProvisioningPushReceiver.java中处理WAP_PUSH_RECEIVED_ACTION广播
+    B,Normal sms

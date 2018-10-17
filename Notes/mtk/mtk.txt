@@ -1,0 +1,186 @@
+persist.net.wo.epdg_fqdn Defect:5854126
+
+[FAQ15351]How to check the SIP message about IMS?
+tony.tu@tcl.com
+Aa123456
+
+文档密码： 0151617374/ 0756847765
+
+Operator_sbp:
+mtk_ril_dsbp.c
+l4bsbp_utility.c
+OperatorUtils.java
+ 
+ELT注册码
+UserID:JRDC
+Password:hg1X6btb
+4GCHHZ7M
+
+
+"AS" may be used to specify the total bandwidth for a single media stream from one site
+"RS" indicates the RTCP bandwidth allocated to active data senders
+"RR" indicates the RTCP bandwidth allocated to other participants in the RTP session (i.e.,receivers).    
+
+m=audio 40010 RTP/AVP 99 105
+b=AS:37   //bitrate of RTP is 37kbps
+b=RS:600  //bitrate of RTCP for send is 600  bps
+b=RR:2000 //bitrate of RTCP for receive is 2000bps
+
+UL bw = AS+RS/1000 = 37.6 kbps 0.6 ignore，so UL bw = 37kbps
+DL bw = AS+RR/1000 = 39 kbps
+
+【wifi】
+	Trying to associate with SSID:连接的wifi
+    current wifi backhaul : rtp_plr
+    wifi connected state changed:0/1
+    leave --> reply=RSSI
+    NETWORK_STATE_CHANGED_ACTION: mIsWifiConnected=false
+MFI-RDS : ( rds_wos_get_wifi_status, 220) [RDS][IF][rds_wos_get_wifi_status] WOS wifi info update: jit(0), plr(100), tput(0)
+MFI-RDS : ( rds_wos_get_wifi_status, 221) [RDS][IF][rds_wos_get_wifi_status] WOS wifi info update: i4wifirssi(-89) 
+MAL-RDS : ( rds_rb_ea_hol2w_cnf, 1987) [RDS-I][RDS][RB][rds_rb_ea_hol2w_cnf] HOl2wSUCC on PDN ifid<0>, sim: 0
+ifid<0>：0表示default 4表示ims
+
+【apn capability】
+06-06 15:54:50.725964 364 741 I MAL-RDS : ( rb_parse_apn, 258) [RDS-I][RDS][rb_parse_apn] parse apn info for profile:2, lapn<ims,2>, wapn<,0> 
+06-06 15:54:50.725989 364 741 I MAL-RDS : (rds_rb_setup_data_call_r, 2288) [RDS-I][RDS][RB]SDC req ifid(4) apn info: lte<ims>, wifi<>, sim: 0
+06-06 15:54:50.725989 364 741 I MAL-RDS : (rds_rb_get_merge_retry_t, 3919) [RDS-I][RB][rds_rb_get_merge_retry_time] APN name for cell:nxtgenphone, wifi:NULL
+
+【Call】ATP/CC/CSM/MM/L4C/NIL/
+ATP将Dial命令传给VDM,VDM初始化初始化init req info
+11:34:31:984 2018/06/12, [AT_RX p30,ch3]ATDE999;
+11:34:31:984 2018/06/12, MSG_ID_VDM_ATP_CMD_DIAL_EMERG_IND
+11:34:31:984 2018/06/12, MSG_ID_VDM_CTRL_TRK_CMD_DIAL_EMERG_IND
+11:34:31:984 2018/06/12, [VDM TRK] ADS Init Req info (call_id_ap = 1, dial_type = VDM_TRK_DIAL_CMD_ATDE)
+11:34:31:984 2018/06/12, MSG_ID_VDM_TRK_ADS_INIT_REQ
+11:34:31:984 2018/06/12, MSG_ID_VDM_TRK_ADS_INIT_CNF
+开始选择domain
+11:34:31:984 2018/06/12, ADS algo: SELECTION RULE (Cellular first)
+11:34:31:984 2018/06/12, ADS algo: SELECT CS (only CS is allowed)
+11:34:31:984 2018/06/12, MSG_ID_VDM_TRK_ADS_SELECT_CNF
+    selected_domain = VDM_ADS_SELECT_RESULT_CS (enum 2)
+    selected_rat = VDM_ADS_SELECT_RAT_CELLULAR (enum 1)
+L4C开始拨号
+11:34:31:984 2018/06/12, MSG_ID_L4CRAC_CALL_STATUS_REQ
+11:34:31:984 2018/06/12, MSG_ID_L4CCSM_CC_EMERGENCY_CALL_SETUP_REQ
+11:34:31:984 2018/06/12, MSG_ID_MMCC_EST_REQ
+    cause = EMERGENCY_CALL (enum 9)
+11:34:31:984 2018/06/12, MOD_MM, MOD_EMM, MM_EMM_SAP, MSG_ID_MM_EMM_CSFB_REQ
+    csfb_req_type = MM_EMM_CSFB_REQ_TYPE_EMERGENCY_CALL (enum 2)
+11:34:46:941 2018/06/12, MSG_ID_MMCC_EST_REJ
+    cause = CM_RR_PLMN_SRCH_REJ_EMERGENCY (enum 2164)
+11:34:46:941 2018/06/12, MSG_ID_L4CCSM_CC_EMERGENCY_CALL_SETUP_CNF
+11:34:46:941 2018/06/12, MSG_ID_L4CCSM_CC_CPI_IND
+    msg_type = CSMCC_ALL_CALLS_DISC_MSG (enum -127)
+11:34:46:941 2018/06/12, Active RAT: RAT_GSM_UMTS
+11:34:46:941 2018/06/12, retry!, src_id= (55), current_action=ATD_ECC, retry_cc=1, retry_ss=0, retry_count=1
+....retry....
+//搜网结束，并且没有找到可用网络
+11:35:03:941 2018/06/12, MOD_NIL, , TRACE_INFO, [ATCI_AT_U_0 s67]NO CARRIER
+11:35:03:941 2018/06/12, MOD_L4C, MOD_CSM, CSM_L4C_SAP, MSG_ID_L4CCSM_CC_ABORT_CALL_REQ
+11:35:03:941 2018/06/12, MOD_L4C, , TRACE_INFO, stop retry & clear msg!, current_action=ATD_ECC
+
+
+【搜索网络】 ATP/EVAL/EMM_EVALIF/MM/NWSEL/RATCM/
+11:34:13:871 2018/06/12, MOD_NWSEL, MOD_EVAL, NWSEL_EVAL_SAP, MSG_ID_NWSEL_EVAL_PLMN_SEARCH_REQ
+    plmn_search_type = ANY_PLMN (enum 0)
+    scan_type = FULL_BAND (enum 2)
+    search_period = SHORT_SEARCH_PERIOD (enum 1)
+    
+11:34:31:984 2018/06/12, MOD_NWSEL, , TRACE_INFO, [NWSEL] PLMN_SEARCH_INDEX 0, RAT_UMTS
+11:34:31:984 2018/06/12, MOD_NWSEL, MOD_MM, NWSEL_MM_SAP, MSG_ID_NWSEL_MM_PLMN_SEARCH_REQ
+    plmn_search_type = ANY_PLMN (enum 0)
+    rat = RAT_UMTS (enum 2)
+    scan_type = FULL_BAND (enum 2)
+    search_period = SHORT_SEARCH_PERIOD (enum 1)
+    
+11:34:31:984 2018/06/12, MOD_EMM, MOD_ERRC, EMM_ERRC_SAP, MSG_ID_EMM_ERRC_NWSEL_STATUS_UPDATE_REQ
+    plmn_search_status = PLMN_SEARCH_STARTED (enum 2)
+    
+11:34:31:984 2018/06/12, MOD_MM, MOD_RATCM, MM_RATCM_SAP, MSG_ID_MM_RATCM_PLMN_SEARCH_REQ
+91104767, 11:34:31:984 2018/06/12, MOD_NWSEL, MOD_EVAL, NWSEL_EVAL_SAP, MSG_ID_NWSEL_EVAL_SEARCH_STATUS_UPDATE_REQ
+    is_plmn_search_2G3G_ongoing = KAL_TRUE (enum 1)
+    cell_type = CELL_TYPE_NOT_APPLICABLE (enum 3)
+    plmn_search_type = ANY_PLMN (enum 0)
+
+11:34:31:984 2018/06/12, MOD_EVAL, MOD_EMM, EVAL_EMM_SAP, MSG_ID_EVAL_EMM_SEARCH_STATUS_UPDATE_REQ
+11:34:31:984 2018/06/12, MOD_EMM_EVALIF, MOD_EMM_PLMNSEL, EMM_EVALIF_PLMNSEL_SAP, MSG_ID_EMM_EVALIF_PLMNSEL_SEARCH_STATUS_UPDATE_REQ
+    is_plmn_search_2G3G_ongoing = KAL_TRUE (enum 1)
+    cell_type = CELL_TYPE_NOT_APPLICABLE (enum 3)
+    plmn_search_type = ANY_PLMN (enum 0)
+    
+11:34:39:021 2018/06/12, MOD_RATCM, MOD_MM, MM_RATCM_SAP, MSG_ID_MM_RATCM_PLMN_SEARCH_CNF
+    result = PLMN_NOT_FOUND (enum 0)
+    rat = RAT_UMTS (enum 2)
+    selected_plmn = (struct)
+    scan_type = FULL_BAND (enum 2)
+    is_fullband_finished = NOT_FINISHED (enum 1)
+    
+11:34:39:021 2018/06/12, MOD_MM, MOD_NWSEL, NWSEL_MM_SAP, MSG_ID_NWSEL_MM_PLMN_SEARCH_CNF
+由于is_fullband_finished为NOT_FINISHED，继续搜索其他网络
+
+11:34:39:021 2018/06/12, MOD_NWSEL, , TRACE_INFO, [NWSEL] PLMN_SEARCH_INDEX 0, RAT_GSM
+........
+11:34:57:801 2018/06/12, MOD_MM, MOD_NWSEL, NWSEL_MM_SAP, MSG_ID_NWSEL_MM_PLMN_SEARCH_CNF
+    selected_cell_type = CELL_TYPE_SUITABLE (enum 0)
+    is_fullband_finished = FINISHED (enum 0)
+
+11:35:03:941 2018/06/12, MOD_ATP, MOD_VDM, VDM_ATP_SAP, MSG_ID_VDM_ATP_CELL_INFO_UPDATE_IND
+    rat = RAT_LTE (enum 4)
+    cell_service = CELL_LIMITED_SERVICE (enum 1)
+    plmn_id = (struct)
+
+    
+【mode and state】
+06-04 23:45:16.795854 366 805 I MAL-RDS : (rds_rb_setup_data_call_r, 2398) [RDS-I][RDS][RB][rds_rb_setup_data_call_req] SDC(cnt:1) for APN<ims,4> select on: <Mobile>, cnf2rild, sim: 0
+06-04 23:45:45.226998 366 806 I MAL-RDS : ( rds_ru_set_uiparam_req, 1477) [RDS-I][RU][EVENT_MFI_RU_SET_UIPARAM_REQ] fgimsolte_en:1, fgwfc_en:1, rdspolicy:1, omacp_fqdn:, roam:0, fgwifiui_en:1, fgimsccp_en:0, fgallow_turnoff_ims:1, sim:0 
+06-04 23:45:45.227834 366 806 I MAL-RDS : ( rds_ru_rpl_gen, 6629) [RDS-I][RU][rds_ru_rpl_gen][RDS] Current policy: fgimsolte_en<1>, fgwfc_en<1>, erdspolicy<1>
+erdspolicy<1> cellular prefer；
+erdspolicy<2> wifi prefer；
+
+【RTP timeout】
+07-05 17:39:46.134824   374   807 I MAL-RDS :  (         rds_ru_urc_hdlr, 2369) [RDS-I][RDS][rds_ru_urc_hdlr] get URC data: +EIMSRTPTO: 1,0,101,5000,30000,1
+07-05 17:39:46.134725   374   766 D MAL-EPDGA:  (   ea_on_notify_task_hdl,  372) [epdga] receive EVENT_EPDGA_RTP_TIMEOUT_NOTIFY
+07-05 17:39:46.134824   374   807 I MAL-RDS :  (         rds_ru_urc_hdlr, 2369) [RDS-I][RDS][rds_ru_urc_hdlr] get URC data: +EIMSRTPTO: 1,0,101,5000,30000,1
+07-05 17:39:46.152966  3514  3558 I VoLTE IMCB-CM: receive the nessage from IMC
+07-05 17:39:46.153970  3514  3514 I VoLTE IMCB-2: {{{{[process_msg] msg_id=100098(0x00018702), dst=IMCB[2], IMCB_IMC_HEADER_FILE_VERNO=5b, MSG_ID_IMC_IN_BEGIN=100000, IMC_FEATURE_BITMAP=0x3 process_msg()@0#184
+07-05 17:39:46.153970  3514  3514 I VoLTE IMCB-2: ENTER imcb_imc_cc_no_rtppkt_ind_handler()@0#4509
+07-05 17:39:46.153970  3514  3514 I VoLTE IMCB-2: ENTER imcb_send_ua_no_rtppkt_req()@0#3574
+07-05 17:39:46.156885  3512  3526 I VoLTE Stack: =============> CCM --> SIP Tx => conn_id : 65536/131073, request_id : 0x23940101, sipmsg magic : 36, method: 7 (vendor/mediatek/proprietary/frameworks/opt/volte/volte_stack/src/sip/sip_app.c:385)
+07-05 17:39:46.158106  3512  3526 I VoLTE SIPTX: [SIPTX-IO] Send SIP (2001:1890:1f8:2075::1:1: 6000  )[65536:327684] ==> { BYE sip:lucentNGFS-099885@[2001:1890:1f8:2075::1:1]:6000;encoded-parm=QbkRBthOEgsTXgkTBA0HHiUrKz1CQEhLS0xANhkLGh1sMTcgK2ghOyAnOCs.ITogYX9jZmR4PDloN14CAkdWURlTWAFDQU8XFRRLAwsbRAsFQgwaG14fFwdOQEZBSA__ SIP/2.0 }
+
+【regist ip addr】
+MAL-IMSM: pcscf pco : 
+
+【 rove out】
+MAL-RDS :  (          ru_check_rvout, 7567) [RDS-I][RDS][RU][ru_check_rvout] in Call, wifi roveout checked!!!: curr rssi(-80), thresh<-75, -82>, sim<0> 
+MAL-RDS :  (  rds_rb_check_callrvout, 3215) [RDS-I][RDS][RB][rds_rb_check_callrvout] Trigger wifi rvout ind: IMS PDN RAN(2), 2nd RPLRAN(254), sim: 0
+MFI-Conn:  (     mfia_task_bootstrap,  911) mfia_task_bootstrap(): an event EVENT_MFI_RB_WIFI_RVOUT_IND(9324) incoming from FD 48!!
+WifiOffloadService: handleMessage: EVENT_ON_ROVE_OUT = { when=-1ms what=8 obj=com.mediatek.wfo.impl.WifiOffloadService$RoveOutMessage@522a636 target=com.mediatek.wfo.impl.WifiOffloadService$4 obj=com.mediatek.wfo.impl.WifiOffloadService$RoveOutMessage@522a636 }
+WifiOffloadService: onRoveOut simIdx: 0 roveOut: true rssi: -80
+
+【epdg cfg and generate message】
+12-12 19:09:00.186723 421 5430 I [epdg_wo]: [CFG] cfg_sim0: epdg_fqdn=[],.......
+12-12 19:09:00.520414 5357 5375 I /system/bin/charon: 10[ENC] [generate_message() 1737] generating IKE_AUTH request 1 [ IDi N(INIT_CONTACT) IDr CPRQ(ADDR DNS PCSCF) SA TSi TSr N(EAP_ONLY) ]
+
+【手动选择对应的运营商配置】
+Step 1. 關閉MD DSBP
+adb shell setprop persist.radio.mtk_dsbp_support 0
+Step 2. 關閉CXP confirm dialog for SIM inserted:
+adb shell setprop persist.mtk_usp_switch_mode 3
+Step 3. Reboot
+Step 4. 在ENG mode手動切換OP configuration
+*#*#3646633#*#* 进入ENG mode => “Others” => “Carrier Express” => 選擇operator => Apply
+
+【Ims pdn disconnect】
+由于TCP连接断开导致
+// Net log
+22:41:15.684816	fc01:abab:cdcd:efe2::1	fc01:cafe::1	TCP	112	50001 → 5101 [RST, ACK] Seq=478 Ack=1453 Win=76032 Len=0 TSval=4294947311 TSecr=1705492
+22:41:15.684831	fc01:abab:cdcd:efe2::1	fc01:cafe::1	TCP	112	50001 → 5101 [RST, ACK] Seq=478 Ack=1453 Win=76032 Len=0 TSval=4294947311 TSecr=1705492
+// Main log
+07-05 18:41:15.974869   698   728 I VoLTE REG: Reset the Reg[0] (module/volte//volte_stack/src/reg/reg.c:2278)
+07-05 18:41:15.975056   698   723 I VoLTE SIPTX: siptx_reset_tcp_client, ipsec channel (0xb2291428, index:1), client soc:-1 (module/volte//volte_stack/src/sip/sip_transport.c:1629)
+07-05 18:41:16.012375   698   723 E VoLTE SIPTX: siptx_connect_tcp_client, Can't find the conn, conn_id = -1 (module/volte//volte_stack/src/sip/sip_transport.c:1802)
+// Modem log
+18:41:15:433 2018/07/05, MOD_ESM, , TRACE_PEER, [MS->NW] ESM_MSG_PDN_DISCONNECT_REQUEST (PTI:3, EBI:0)
+
+

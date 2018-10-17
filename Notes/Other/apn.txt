@@ -1,0 +1,10 @@
+APN_TYPE_DEFAULT ：默认网络连接，当激活时所有数据传输都使用该连接，不能与其他网络连接同时使用 
+APN_TYPE_MMS ：彩信专用连接，此连接与default类似，用于与载体的多媒体信息服务器对话的应用程序，此连接能与default连接同时使用。适用场合：使用彩信服务时，必须有mms类型的接入点，不必选中，应用程序会自动使用此接入点 
+APN_TYPE_SUPL ：是Secure User Plane Location“安全用户面定位”的简写，此连接与default类似，用于帮助定位设备与载体的安全用户面定位服务器对话的应用程序，此连接能与default连接同时使用， 
+APN_TYPE_DUN ：Dial Up Networking拨号网络的简称，此连接与default连接类似，用于执行一个拨号网络网桥，使载体能知道拨号网络流量的应用程序，此连接能与default连接同时使用 
+APN_TYPE_HIPRI ：高优先级网络，与default类似，但路由设置不同 
+APN_TYPE_FOTA ： 
+APN_TYPE_IMS ： 
+APN_TYPE_CBS ： 
+APN_TYPE_IA ： 
+APN_TYPE_EMERGENCY：紧急APN 

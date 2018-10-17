@@ -1,0 +1,152 @@
+【Modules】
+IMC/IMCB/IMSM/IWLAN/WO/D2*/DDM/DAST/L4BPDN/ATP/NIL/SIMMNGR/SSDS/VDM_ADS/LTECSR
+【Keywords-ap】
+epdg_wo/IKE/ENC/volte im*
+
+SDMID:
+ril.volte.mal.c_chk_override CN 
+persist.data.iwlan.enable true
+def.provision.control.wfc  0 //PR5301679
+def_settings_apn_disable_bearer_item 0x00
+
+persist.wfc.default.open
+
+black
+ro.def.software.svn
+
+【PDN disconnect req】
+WO_ADPT[change_pdn_state:113]PDN(ims:1) [CONNECTING]->[CONNECTED]
+D2RM[ddm_timer_start:983]ddm_timer_start <3000>
+VDM_CTRL - VDM_ADSMSG_ID_VDM_CTRL_ADS_IMS_HANDOVER_END_IND
+D2RM[d2rm_src_pdn_ho_disconn_to_handler:418]PDN<1> source RAN on Cell is still ACT while T.O, force DEACT
+D2RM - DDMMSG_ID_D2RM_DDM_DEACT_DATA_CALL_REQ
+ESM[MS->NW] ESM_MSG_PDN_DISCONNECT_REQUEST (PTI:10, EBI:0)
+
+【SBP】
+SBP SubID
+
+【APN是否有wifi能力】
+apn info/WLAN apn info
+
+【相关门限值】
+Current policy: fgimsolte_en
+
+【version for imc/imcb】
+9-08 17:42:29.152078 5571 5571 E VoLTE IMCB: [IMC]struct_verno:0x59,msgid_verno :0x1 imcb_imc_ims_init_ind_handler
+09-08 17:42:29.152138 5571 5571 E VoLTE IMCB: [IMCB]struct_verno:0x5c,msgid_verno:0x1 imcb_imc_ims_init_ind_handler 
+09-08 17:42:29.152182 5571 5571 E VoLTE IMCB: IMCB and IMC verno un-sync!!! disable IMCB/IMC connection!!!! imcb_imc_ims_init_ind_handler 
+
+
+【Attach type】
+1457 2017-07-18 11:44:14.347671 192.168.43.147 129.192.166.10 ISAKMP 592 IKE_AUTH MID=01 Initiator Request
+Type Payload: Configuration (47)
+Attribute Type: (t=8,l=17) INTERNAL_IP6_ADDRESS
+Value: 2600038047b9d8e7000000127b57240140
+
+这个参数，如果value有值，表示 attach type为handover；
+如果value = empty，表示attach type为initial attach；
+
+【Ehplmn】
+MSG_ID_SIMMNGR_QUERY_SIM_INFO_CNF
+wohplmn=0,"310260"
+MSG_ID_SIM_GMSS_READY_IND
+num_of_ehplmn = 0x00
+
+【Certificate - WO_STATUS_UNABLE_TO_VALIDATE_SERVER_CERTIFICATE_EPDG】
+received end entity cert
+sending cert request for
+
+【IP address - WO_STATUS_INVALID_IP_IN_HANDOVER】
+1) UT attached Wi-Fi PDN (ePDG Turnnel) with handover request and UE send request to allocate IP address "fc01:abab:cdcd:efe2:171f:78f4:58f4:d6f4"
+> 05-29 22:38:52.509196 767 767 I [epdg_wo]: [WOA] split_cmds: cmd:[wohol=0,"ims",1,"ccmni0",2,1,0,0,"fc01:abab:cdcd:efe2:171f:78f4:58f4:d6f4",""](77)
+
+(2) Network allocate "fc01:abab:cdcd:efe2::1" to UE.
+> 05-29 22:38:56.557830 767 767 I [epdg_wo]: [SKT] [wod_ipsec] received: [ipsecattach=0,1,0,0,"fc01:abab:cdcd:efe2::1","",0] (fd: [9])
+(3) So, UE report 1999 (WO_STATUS_INVALID_IP_IN_HANDOVER) failure because "fc01:abab:cdcd:efe2:171f:78f4:58f4:d6f4" is not equal to "fc01:abab:cdcd:efe2::1"
+> 05-29 22:38:56.558841 767 4933 I [epdg_wo]: [C3I][PS0:0] wo_ccci_write end, ret:27, buf:[+wohol:0,"ims",1,1999,0,-2](27)
+
+However, both fc01:abab:cdcd:efe2:171f:78f4:58f4:d6f4" and "fc01:abab:cdcd:efe2::1" has same IP preifx.
+In 3GPP Spec, the packets will be route by prefix only. So, UE should treat the condition as pass.
+
+【Regist-Log-91/92】
+1,Key log of IMS PDN setup flow
+* Start IMS Service
+    D IMS_RILA: [3767]> RIL_REQUEST_SET_IMS_ENABLE //turnOnIms or turnOffIms
+    D AT : AT> AT+EIMS=1
+    D RIL : Nw URC:+EIMS: 1
+    D IMS_RILA: [UNSL]< RIL_UNSOL_IMS_ENABLE_START
+
+* Connect IMCB and IMSA with socket
+    D [ImsAdapter]: enableImsAdapter: misImsAdapterEnabled=false
+    D [ImsAdapter]: connectSocket() Enter 
+    D [ImsAdapter]: enalbeImsAdapter(): connectSocket success
+
+* IMSA receive IMS_PDN_ACT_EVENT, then sent networkRequest to conectivityservice 
+    VaSocketIO(): Run/dumpEvent: phone_id:
+    D [ImsEventDispatcher]: dispatchCallback: request ID:
+    D use-Rlog/RLOG-GSM: [dedicate] DataDispatcher receives request [900008, 4, phoneId: 0]
+    D use-Rlog/RLOG-GSM: [dedicate] DataDispatcher handleDefaultBearerActivationRequest 
+    D use-Rlog/RLOG-GSM: [dedicate] DataDispatcher has ims apn!!
+    D use-Rlog/RLOG-GSM: [dedicate] DataDispatcher requestNwRequest pos: 0, requestApnType: ims subId: 1
+    D use-Rlog/RLOG-GSM: [dedicate] DataDispatcher start requestNetwork for ims
+
+* PDN setup flow in telephony Framework
+    D ConnectivityService: requestNetwork for Request from uid/pid:1001/1548 for NetworkRequest [ id=11, legacyType=11… 
+    D DctController: [DctController] requestNetwork request=NetworkRequest [ id=11, legacyType=11… 
+    D DctController: [DctController] onExecuteRequest apn = ims phoneId=0 
+    [ApnContext:ims] incRefCount:mRefCount == 0 
+    D DCT : [0]applyNewState(ims, true(false), true(true))
+    D DCT : [0]trySetupData for type:ims…
+    D DCT : [0]buildWaitingApns: X apnList=[[ApnSettingV3] IMS…
+    D DC-2 : onConnect: carrier='IMS' APN='ims' proxy='' port='‘
+    D RILJ : [4171]> SETUP_DATA_CALL 16 2 ims 0 IPV4V6 5 [SUB0]
+    D RILJ : [4171]< SETUP_DATA_CALL DataCallResponse…
+    
+
+【handover】
+// ap
+    onHandover stage: -1 rat: 2
+    stage:
+        -1  fail ;0  start;1  end
+    rat: 
+        0    unspcefied;1    3G; 2    wifi
+    AT+EIMSHOSTA = <status>,<result>,<source_ran>,<target_ran>
+        status:0 start/1 end
+        result:0 failed/1 sucessed/2 not specified
+        ran:0 Unspec/1 LTE/2 WIFI
+        
+12-05 00:19:55.451811 314 724 I MAL-RDS : ( ru_check_rvout, 8148) [RDS-I][RDS][RU][ru_check_rvout] in Call, wifi roveout checked!!!: curr rssi(-83), thresh<-75, -82>, sim<0> 
+12-05 00:19:55.453456 314 723 I MAL-RDS : ( rds_rb_dm_how2l_req, 1664) [RDS-I][RDS_RB_UT][rds_rb_dm_how2l_req]PDN ifid<4> start how2l, sim: 0
+ifid<4> ims
+ifid<0> default
+
+MSG_ID_ATP_IWLAN_EWFCPREF_REQ  当前模式
+MSG_ID_ATP_IWLAN_EWIFIASC_REQ   wIfi状态
+pkt_info loss_rate:丢包率
+MSG_ID_ATP_IWLAN_L4CELLTECH_URCRPT_REQ    cell网络注册状态
+MSG_ID_ATP_IWLAN_IMSCFG_REQ  功能开关状态
+MSG_ID_EVHD_WMOB_WANS_RPL_UPDATE_IND 不同状态下的rat优先级,RPL-Rat Preference List
+rpl_eran[][],第一个参数：0-new 1-当前为cell 2-当前为vowifi 第二个参数值为rat:1-cell 2-vowifi
+Cell 信号: thr_lte_rsrp_qual/thr_umts_rscp_qual/thr_wifi_rssi_qual
+iwlan_L4_CELLTECH
+reg_tech: 1-> lte
+EPDNHANDOVER
+
+
+1.Check new RPL to see if valid for handover
+check if H.O
+
+2.Query corresponding data parameters
+MSG_ID_D2PM_D2RM_GET_PDN_PROFILE_IND
+MSG_ID_D2PM_D2RM_GET_PDN_PROFILE_RSP
+recv H.O profile for cid<1>
+
+3.Notify start to handover
+_PDN_HO_NOTIFY_
+
+4.Act data call
+_ACT_DATA_CALL_
+
+5.Notify handover end
+_PDN_HO_NOTIFY_
+

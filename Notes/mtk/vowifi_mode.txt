@@ -1,0 +1,63 @@
+// Op06/16/18
+WfcSwitchController.java           MtkImsManager.setWfcMode(Context context, int wfcMode, int phoneId)
+WfcSwitchController.java           MtkImsManager.setWfcMode(Context context, int wfcMode, int phoneId)
+WfcSwitchController.java           MtkImsManager.setWfcMode(Context context, int wfcMode, int phoneId)
+WfcSwitchController.java           MtkImsManager.setWfcMode(Context context, int wfcMode, int phoneId)
+WfcSwitchController.java           ImsManager.setWfcMode(Context context, int wfcMode)
+WfcSwitchController.java           ImsManager.setWfcMode(Context context, int wfcMode)
+WfcSwitchController.java           ImsManager.setWfcMode(Context context, int wfcMode)
+WfcSwitchController.java           ImsManager.setWfcMode(Context context, int wfcMode)
+WfcSwitchController.java           ImsManager.setWfcMode(Context context, int wfcMode)
+WfcSwitchController.java           ImsManager.setWfcMode(Context context, int wfcMode)
+WfcSwitchController.java           ImsManager.setWfcMode(Context context, int wfcMode)
+WfcSwitchController.java           ImsManager.setWfcMode(Context context, int wfcMode)
+
+//Entitlement for OP07
+EntitlementActivity.java           ImsManager.setWfcMode(Context context, int wfcMode)
+
+// Op06
+WifiCallingReceiverService.java     ImsManager.setWfcMode(Context context, int wfcMode)
+
+// OP07 setting UI
+WfcSettingsActivity.java            ImsManager.setWfcMode(Context context, int wfcMode)
+
+// ACTION_CARRIER_CONFIG_CHANGED
+ImsConfigReceiver.java              MtkImsManager.setWfcMode(Context context, int wfcMode, int phoneId)
+
+// Set wfc mode in settings
+WifiCallingSettings.java           MtkImsManager.setWfcMode(context, buttonMode, false, phoneId);
+WifiCallingSettings.java           MtkImsManager.setWfcMode(context, buttonMode, true, phoneId);
+WifiCallingSettings.java            MtkImsManager.setWfcMode(context, buttonMode, true, phoneId);
+WifiCallingSettings.java            ImsManager.setWfcMode(context, buttonMode, false);
+WifiCallingSettings.java            ImsManager.setWfcMode(context, buttonMode, true);
+WifiCallingSettings.java            ImsManager.setWfcMode(context, buttonMode, true);
+AdvancedWifiCallingSettings.java    MtkImsManager.setWfcMode(mContext, buttonMode, true, 0);
+WfcModeDialogActivity.java          MtkImsManager.setWfcMode(Context context, int wfcMode, boolean roaming, int phoneId)
+WfcModeDialogActivity.java          MtkImsManager.setWfcMode(Context context, int wfcMode, boolean roaming, int phoneId)
+
+// OP08 Wifi only模式下拨打emc，修改模式为cellular preferred,
+OpImsPhoneCallTrackerImpl.java            imsManager.setWfcModeForSlot(ImsConfig.WfcModeFeatureValueConstants.CELLULAR_PREFERRED);
+at com.mediatek.ims.internal.MtkImsConfig.setWfcMode(MtkImsConfig.java:271)
+at com.mediatek.ims.internal.MtkImsManager.setWfcModeConfigForSlot(MtkImsManager.java:1119)
+at com.mediatek.ims.internal.MtkImsManager.setWfcModeInternalForSlot(MtkImsManager.java:1100)
+at com.mediatek.ims.internal.MtkImsManager.setWfcModeForSlot(MtkImsManager.java:947)
+at com.mediatek.op08.telephony.imsphone.OpImsPhoneCallTrackerImpl.switchWfcModeIfRequired(OpImsPhoneCallTrackerImpl.java:56)
+at com.mediatek.internal.telephony.imsphone.MtkImsPhoneCallTracker.switchWfcModeIfRequired(MtkImsPhoneCallTracker.java:1990)
+
+// EVENT_SERVICE_STATE_CHANGED or EVENT_VOICE_CALL_ENDED,,实际上配置值没有修改，仅仅修改modem侧当前模式
+ImsPhone.java                      ImsManager.setWfcMode(Context context, int wfcMode, boolean roaming)
+at com.android.ims.ImsManager.setWfcMode(ImsManager.java:1079)
+at com.android.internal.telephony.imsphone.ImsPhone.updateRoamingState(ImsPhone.java:1738)
+at com.android.internal.telephony.imsphone.ImsPhone.handleMessage(ImsPhone.java:1356)
+at com.mediatek.internal.telephony.imsphone.MtkImsPhone.handleMessage(MtkImsPhone.java:1185)
+
+// Ims Service update,不修改配置值，仅下发到modem
+at com.mediatek.ims.config.internal.MtkImsConfigImpl.setWfcMode(MtkImsConfigImpl.java:283)
+at com.mediatek.ims.internal.MtkImsConfig.setWfcMode(MtkImsConfig.java:270)
+at com.mediatek.ims.internal.MtkImsManager.setWfcModeConfigForSlot(MtkImsManager.java:1119)
+at com.mediatek.ims.internal.MtkImsManager.setWfcModeInternalForSlot(MtkImsManager.java:1100)
+at com.mediatek.ims.internal.MtkImsManager.setWfcModeInternal(MtkImsManager.java:1092)
+at com.mediatek.ims.internal.MtkImsManager.setWfcModeInternal(MtkImsManager.java:1083)
+at com.android.ims.ImsManager.updateWfcFeatureAndProvisionedValues(ImsManager.java:1655)
+at com.android.ims.ImsManager.updateImsServiceConfig(ImsManager.java:1477)
+at com.mediatek.ims.config.internal.ImsConfigStorage$CarrierConfigHandler.handleMessage(ImsConfigStorage.java:246)

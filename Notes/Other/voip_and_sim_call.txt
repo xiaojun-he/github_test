@@ -1,0 +1,74 @@
+NEW_ACTIVE_OR_DIALING_CALL
+unfocused -----> voip call/sim call
+
+NO_MORE_RINGING_CALLS/NEW_ACTIVE_OR_DIALING_CALL
+ringing -----> voip call/sim call hasActiveOrDialingCalls
+
+FOREGROUND_VOIP_MODE_CHANGE
+sim call <-----> voip call
+
+NO_MORE_HOLDING_CALLS/NEW_ACTIVE_OR_DIALING_CALL
+other -----> voip call/sim call
+
+
+MT_AUDIO_SPEEDUP_FOR_RINGING_CALL
+ring ------> sim call
+
+
+09-19 10:25:01.306 I/Telecom ( 3078): CallAudioModeStateMachine: Audio focus entering SIM CALL state: PCR.oR->CAMSM.pM_2001@AJ0_3
+
+09-19 10:25:08.069 I/Telecom ( 3078): CallAudioModeStateMachine: Message received: FOREGROUND_VOIP_MODE_CHANGE.: CSW.sIVAM->CAMSM.pM_4001@AMU_0
+09-19 10:25:08.077 I/Telecom ( 3078): CallAudioModeStateMachine: Audio focus entering VOIP CALL state: CSW.sIVAM->CAMSM.pM_4001@AMU_0
+
+09-19 10:25:48.359 I/Telecom ( 3078): CallAudioModeStateMachine: Message received: NO_MORE_ACTIVE_OR_DIALING_CALLS.: CSW.sR->CAMSM.pM_1001@ARw_0
+09-19 10:25:48.361 I/Telecom ( 3078): CallAudioModeStateMachine: Audio focus entering RINGING state: CSW.sR->CAMSM.pM_1001@ARw_0
+
+09-19 10:25:50.688 I/Telecom ( 3078): CallAudioModeStateMachine: Message received: NO_MORE_RINGING_CALLS.: CSW.sA->CAMSM.pM_1002@AT4_0
+09-19 10:25:50.696 I/Telecom ( 3078): CallAudioModeStateMachine: Audio focus entering SIM CALL state: CSW.sA->CAMSM.pM_1002@AT4_0
+
+
+1,handleCreateConnectionSuccess
+2，
+--->SipConnection.java onAddedToCallService
+--->Connection.java setAudioModeIsVoip
+--->onAudioModeIsVoipChanged(ConnectionService.java)
+ConnectionServiceAdapter.java
+--->setIsVoipAudioMode
+ConnectionServiceAdapterServant.java
+--->MSG_SET_IS_VOIP_AUDIO_MODE
+RemoteConnectionService.java
+--->setIsVoipAudioMode
+共有
+--->Call.java packages/services/telecomm
+--->setIsVoipAudioMode
+--->CallsManager.java
+--->CallAudioManager.java
+--->onIsVoipAudioModeChanged
+--->FOREGROUND_VOIP_MODE_CHANGE
+
+Mute flow:
+InCallUI/src/com/android/incallui/TelecomAdapter.java
+mute(shouldMute)
+/frameworks/base/telecomm/java/android/telecom/InCallService.java
+setMuted(state)
+/frameworks/base/telecomm/java/android/telecom/Phone.java
+setMuted(state)
+/packages/services/Telecomm/src/com/android/server/telecom/InCallAdapter.java
+mute(shouldMute)
+/packages/services/Telecomm/src/com/android/server/telecom/CallsManager.java
+mute(shouldMute)
+/packages/services/Telecomm/src/com/android/server/telecom/CallAudioManager.java
+mute(shouldMute)
+/packages/services/Telecomm/src/com/android/server/telecom/CallAudioRouteStateMachine.java
+unhandledMessage
+-->case MUTE_ON:setMuteOn(true);
+-->audio.setMicrophoneMute
+AudioManager.java/AudioService.java
+AudioSystem.muteMicrophone(on)
+
+
+
+
+
+
+

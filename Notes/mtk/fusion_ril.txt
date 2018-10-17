@@ -1,0 +1,83 @@
+所有模块对应的AT:
+vendor/mediatek/proprietary/hardware/ril/fusion/mtk-ril/mdcomm/模块/Rmc.*RequestHandler.cpp
+vendor/mediatek/proprietary/hardware/ril/fusion/mtk-ril/telcore/模块/Rtc.*Controller.cpp
+
+1,RtcSuppServController.cpp
+registerToHandleRequest(request_id_list, sizeof(request_id_list)/sizeof(const int))
+
+2,RfxController.cpp
+root->registerToHandleRequest
+
+3,RfxRootControlle.cpp
+registerInternal -> list.add(entry);
+将request_id_list添加到list中
+
+调用流程：
+1,ril_callbacks.c
+onRequest
+
+2,Rfx.cpp
+rfx_enqueue_request_message
+
+3,RfxDispatchThread.cpp
+enqueueRequestMessage -> dispatchRequestQueue.enqueue(obj) -> processRequestMessageLooper(dequeue)
+
+4,RfxMainThread.cpp
+enqueueMessage -> s_self->m_looper->sendMessage(handler, s_self->m_dummy_msg) -> RfxMainHandler::handleMessage -> onHandleMessage
+
+5,RfxRootController.cpp
+processMessage -> findMsgHandler -> list.itemAt(index) -> handler->processMessage
+
+6,RfxController.cpp
+onHandleRequest
+
+7,RfxRilAdapter.cpp
+requestToMcl
+a,RfxDispatchThread::addMessageToPendingQueue 后续调用clearPendingQueue -> adapter->responseToRilj
+b,RfxMclDispatcherThread::enqueueMclMessage 
+
+8,RfxMclDispatcherThread.cpp
+s_self->m_looper->sendMessage -> onHandleMessage -> channel->enqueueMessage
+
+9,RfxChannel.cpp
+mSender->enqueueMessage(msg);
+
+10,RfxSender.cpp
+ m_looper->sendMessage(handler, m_dummy_msg) -> processMessage
+ 
+11,RfxHandlerManager.cpp
+processMessage
+
+12,RfxBaseHandler.cpp
+ onHandleRequest
+ 
+13,RmcSuppServRequestHandler.cpp
+onHandleRequest
+
+
+
+
+
+返回：
+1，在发送步骤13处理后，直接调用responseToTelCore(response)，进入RfxBaseHandler.cpp
+
+2，RfxDispatchThread.cpp ->  enqueueResponseMessage -> dispatchResponseQueue.dequeue()
+
+3, RfxMainThread.cpp -> enqueueMessage() -> handleMessage -> onHandleMessage -> root->processMessage(m_msg)
+
+4, RfxRootController.cpp
+processMessage -> findMsgHandler -> list.itemAt(index) -> handler->processMessage
+
+5, RfxController.cpp
+processMessage -> onHandleResponse -> responseToRilj
+
+6, RfxRilAdapter.cpp -> responseToRilj
+RFX_onRequestComplete -> ril_callbacks.c -> s_rilenv->OnRequestComplete
+
+7,ril_callbacks.c
+s_rilenv->OnRequestComplete
+
+8,ril.cpp
+RIL_onRequestComplete -> pRI->pCI->responseFunction,ril_commands.h对应的函数
+
+9.ril_service.cpp

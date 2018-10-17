@@ -1,0 +1,57 @@
+MO call
+1. Telecommanager.java
+placeCall作为AP调用的第一个接口，接着进入TelecomServiceImpl.java中的placeCall,通过调用processIntent
+
+2.UserCallIntentProcessor.java 
+processIntent -> processOutgoingCallIntent -> sendBroadcastToReceiver
+
+3.PrimaryCallReceiver.java
+onReceive
+
+4.CallIntentProcessor.java
+processIntent -> processOutgoingCallIntent -> callsmanager.startOutgoingCall -> sendNewOutgoingCallIntent -> broadcaster.processIntent()
+
+5.NewOutgoingCallIntentBroadcaster.java
+-> mCallsManager.placeOutgoingCall
+
+6.packages/services/Telecomm/src/com/android/server/telecom/Call.java
+startCreateConnection
+
+7.CreateConnectionProcessor.java
+process() -> attemptNextPhoneAccount -> mService.createConnection
+
+8.ConnectionServiceWrapper.java -> ConnectionService.java
+createConnection -> MSG_CREATE_CONNECTION -> createConnection -> onCreateOutgoingConnection
+
+9.TelephonyConnectionService.java
+placeOutgoingConnection -> phone.dial
+
+
+MT call
+
+GsmCdmaCallTracker.java
+EVENT_CALL_STATE_CHANGE -> pollCallsWhenSafe -> EVENT_POLL_CALLS_RESULT -> handlePollCalls -> mPhone.notifyNewRingingConnection -> mNewRingingConnectionRegistrants.notifyRegistrants -> EVENT_NEW_RINGING_CONNECTION
+
+PstnIncomingCallNotifier.java
+EVENT_NEW_RINGING_CONNECTION -> handleNewRingingConnection -> sendIncomingCallIntent -> TelecomManager.from(context).addNewIncomingCall
+or
+CallNotificationReceiver.java
+sendIncomingCallIntent -> TelecomManager.from(context).addNewIncomingCall
+
+TelecomServiceImpl.java
+addNewIncomingCall -> processIncomingCallIntent
+
+CallIntentProcessor.java
+processIncomingCallIntent
+
+CallsManager.java
+processIncomingCallIntent -> call.startCreateConnection
+
+packages/services/Telecomm/src/com/android/server/telecom/Call.java
+startCreateConnection
+
+CreateConnectionProcessor.java
+process() -> attemptNextPhoneAccount -> mService.createConnection
+
+7.ConnectionServiceWrapper.java -> ConnectionService.java
+createConnection -> MSG_CREATE_CONNECTION -> createConnection -> onCreateIncomingConnection/connection.onShowIncomingCallUi()

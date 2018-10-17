@@ -1,0 +1,134 @@
+emm_update_lib.c 在 emm_init_attach_procedure 调用 emm_build_and_send_get_pdn_connectivity_req_ind 进入emm_esm_handler.c
+12:10:54.611 NAS MM/High [emm_update_lib.c    987] DS: SUB 1 =EMM= Send request to get PDN_CONNECTIVITY_REQ message
+
+在emm_esm_handler.c 在emm_build_and_send_get_pdn_connectivity_req_ind中调用 event_report_payload 发出对应的消息，进入esm_bcm.c
+12:10:54.611 NAS MM/High [emm_esm_handler.c   2266] DS: SUB 1 =EMM= Sent NAS_ESM_GET_PDN_CONNECTIVITY_REQ_IND w/ Seq Num 1
+
+在esm_bcm.c handle_emm_message中根据消息调用 esm_build_and_send_get_pdn_connectivity_req_ind ， 进入 esm_utils.c，并发送 MM_CM_GET_PDN_CONNECTIVITY_REQUEST_IND
+12:10:54.620  NAS SM/High  [esm_utils.c   3435] DS: SUB 1 ESM: ESM sent MM_CM_GET_PDN_CONNECTIVITY_REQUEST_IND
+
+在 cmltecall.c cmltecall_rpt_proc中，收到 MM_CM_GET_PDN_CONNECTIVITY_REQUEST_IND 后发出 CM_CALL_EVENT_GET_PDN_CONN_IND ，从而进入ds3gcmif.c  ds3gi_cm_call_event_cb 将消息修改为 DS_CMD_CM_CALL_EV_GET_PDN_CONN_IND
+（在cmtask_msgr_init 中注册 MM_CM_GET_PDN_CONNECTIVITY_REQUEST_IND ，在 ds3gi_cm_init 中通过 cm_mm_client_call_reg 将 CM_CALL_EVENT_GET_PDN_CONN_IND 和 ds3gi_cm_call_event_cb 关联起来）
+12:10:54.628  DS 3G Manager/High  [ds3gcmif.c   1282] ds3gi_cm_call_event_cb: call_event:96 call_id:254, call_type:2 
+96 -> CM_CALL_EVENT_GET_PDN_CONN_IND
+
+在ds3gmgr.c 中 通过 ds3gi_process_cm_call_get_pdn_conn_ind_cmd 处理 DS_CMD_CM_CALL_EV_GET_PDN_CONN_IND,并获取call mode
+12:10:54.645 DS 3G Manager/High  [ds3gcmif.c   6289] Attach Request - Rx'ed CM_CALL_EVENT_GET_PDN_CONN_IND
+
+通过 hdlr_tbl_ptr->get_pdn_conn_ind_hdlr 进入Ds_3gpp_hdlr.c 中的 ds3gpp_eps_get_pdn_conn_ind_hdlr 。获取网络模式和PLMN,并判断PLMN是否为null
+12:10:54.645 DS 3GPP/Medium [ds_3gpp_throttle_sm.c   2073] PLMN being inspected is non-zero
+12:10:54.645 DS 3GPP/High   [ds_3gpp_roaming_hdlr.c   1270] Processing new PLMN Info on subs id 0
+
+    若不为null，check and set roaming status : ds_3gpp_roaming_inform_new_plmn_info
+    【Log】Roaming Status:
+    12:10:54.645  DS 3GPP/High [ds_3gpp_roaming_hdlr.c   1350] Roaming Status: 0 (1: Roaming, 0: Home)
+    12:10:54.645  DS 3GPP/High [ds_3gpp_roaming_hdlr.c    927] Roaming status. Old: 0, New: 0
+
+进入 ds_eps_pdn_context.c ds_eps_pdn_cntxt_get_pdn_conn_ind_hdlr
+    i:Clear the APN  reject throttling flag
+    12:10:54.645 DS 3GPP/High [ds_3gpp_pdn_throttle_sm.c  10037] APN reject SM is set to 0
+    12:10:54.646 DS LTE/Medium [ds_eps_pdn_context.c   7609] Clearing the APN REJECT throttle flag
+    // Get attach state
+    12:10:54.646 DS LTE/High [ds_eps_pdn_context.c   4422] Attach SM. Current State: 0 on Subs Id (CM) 0
+    12:10:54.646 DS LTE/High [ds_eps_pdn_context.c   7664] Setting attach SM to PROCESS_GET_PDN_CONN_IND State
+
+    ii: ds_eps_attach_sm_handle_get_pdn_conn_ind -> ds_eps_get_attach_prof
+    12:10:54.647 DS LTE/High [ds_eps_pdn_context.c    823] Profile Id used for attach is 1
+
+    iii:ds_eps_pdn_cntxt_bring_up_attach_pdn
+    12:10:54.647 DS LTE/High [ds_eps_pdn_context.c    823] Profile Id used for attach is 1
+    12:10:54.647 DS LTE/High [ds_eps_pdn_context.c   7160] Attach initiation. Set Target_Rat to LTE
+    // ds3gmgr_send_trat_ind -> ds3g_set_target_rat_ex
+    12:10:54.648 DS 3G Manager/Medium [ds3gmgr.c   1778] ds3g_set_target_rat on sub:0 trat:9
+    12:10:54.648 DS LTE/Error [ds_eps_pdn_context.c   7199] Cannot read EFS Config item DS_3GPP_CFG_PROFILE_LIST
+        a: ds_eps_pdn_cntxt_get_attach_pdn
+            1,get default pdn context by call ds_3gpp_pdn_cntxt_get_def_pdn
+            2,Get attach profile number by call ds_eps_get_attach_prof
+            3,Get profile info by call ds_umts_get_pdp_profile_context_info_per_subs
+            4,Get support ip type by call ds_pdn_cntxt_get_apn_ip_support_info
+        b:ds_eps_pdn_cntxt_allocate_pdn_and_bringup_ifaces
+
+            1,根据subid调用ds_pdn_cntxt_allocate_new_pdn_context函数创建一个新的PDN context(pdn_cntx_p)
+            2,调用ds_pdn_cntxt_process_pdp_profile_info函数给pdn_cntx_p赋值，并获取支持的ip类型(ip_support)和ds_3gpp_pdp_profile_process_status的值
+            3,调用ds_eps_get_lte_attach_dual_ip_fb_status确认之前是否有attemp attach并且failed，如果有，并且ip_support为IPV4V6,fail的原因为PS_NET_DOWN_REASON_UNKNOWN_PDP(#28),那么调用ds_eps_get_lte_attach_dual_ip_fb_ip_type获取Fall black的IP类型，来修改pdp_type和ip_support的值
+            12:10:54.648 DS 3GPP/Medium [ds_eps_pdn_context.c    527] Returning Dual IP FB feature status : 0
+            4,根据pdp_type的值分别配置V4 ps iface并bringup iface.
+            // Update V6 sm:ds_3gpp_pdn_context_v6_sm_update -> dssnet6_sm_update
+            12:10:54.650 DS 3G Manager/Medium     [ dsgen_iface6_hdlr.c    655] DSSNet6 SM 0xc1cc89e8 for iface 0x8004:1 updated
+            
+            // Bring up iface:ps_iface_active_bring_up_cmd -> ps_iface_active_bring_up_cmd_ex
+            12:10:54.650 Data Services/Medium     [ps_iface.c   4281] ps_iface_active_bring_up_cmd(): Active bring up cmd
+            12:10:54.650 Data Services/Medium     [ps_iface.c   4357] Active bringing up iface 0x8004:1, state 2, curr priority 0x0
+            
+            // this_iface_ptr->bring_up_cmd_f_ptr 调用 ds_pdn_cntxt_ifaceUpCmd，将 DS_CMD_3GPP_IFACE_UP 放入堆栈中
+            12:10:54.650 DS 3GPP/High             [ds_3gpp_pdn_context.c   3842] IFACE UP CMD for 3GPP iface pdn cntx ptr:0xc29968d0 info:0
+
+            5,ds_apn_table_add_pdn -> ds_apn_table_alloc_dyn_mem
+            12:10:54.650 DS 3GPP/High [ ds_3gpp_apn_table.c   1559] APN table dyn memory allocated at index:0
+            
+        b:sent event
+        12:10:54.650             DS LTE/High              [ds_eps_pdn_context.c   7389] Sent PS_SYS_EVENT_3GPP_LTE_ATTACH_INIT
+
+根据 ds_eps_pdn_cntxt_get_pdn_conn_ind_hdlr 的结果，重置ds3gpp_set_is_attach_initiated_flag
+12:10:54.650 DS 3GPP/Medium [ds_3gpp_hdlr.c   5452] Attach initiated flag for Subs Id(CM): 0 is 1
+
+处理 DS_CMD_3GPP_IFACE_UP ，对V4/V6各执行一次
+12:10:54.653 DS 3GPP/Medium [ds_3gpp_pdn_context.c  15871] ds3gpp_processPSCmd: received 1107
+
+    ds_pdn_cntxt_ifaceUpCmdHdlr 
+        1,ds_pdn_cntxt_validate_iface_up_cmd
+            //Check if NULL APN is supported
+            12:10:54.653 DS 3GPP/High [ds_3gpp_pdn_context.c  11320] Do not reject null_apn
+            // Is PDN limit enabled
+            12:10:54.653             DS 3GPP/Medium           [ds_3gpp_pdn_limit_hdlr.c   2970] PDN Limit is enabled: 0
+            //APN reject throttle SM check
+            12:10:54.653 DS 3GPP/High  [ds_3gpp_pdn_context.c  11253] HO attach scenario:0
+            // is_rpm_enabled
+            12:10:54.653 DS 3GPP/Error [ds_3gpp_rpm.c    281] RPM util params not allocated yet for subs_id: 0
+            // ds_3gpp_nv_manager_get_call_orig_before_ps_attach
+            12:10:54.653 DS 3GPP/High [ds_3gpp_nv_manager.c   3278] call_orig_before_ps_attach NV: 70332 is 0 in EFS
+        2,ds_bearer_cntxt_allocate_new_bearer
+            i:ds_bearer_cntx_alloc_dyn_mem,并通过 allocate_eps_bearer 进入 ds_eps_bearer_context.c 中的 ds_eps_bearer_cntxt_alloc_dyn_mem
+                12:10:54.653 DS 3GPP/High [ds_3gpp_bearer_context.c  12512] Bearer Context dyn memory allocated at index 0,Subs Id(CM): 0
+                12:10:54.653 DS LTE/Medium [ds_eps_bearer_context.c   7346] EPS Bearer Dynamic Mem allocated at index:0
+                12:10:54.653 DS 3GPP/High [ds_3gpp_bearer_context.c  12521] Umts and EPS bearers dyn mem allocated
+            ii:
+                12:10:54.653 DS 3GPP/High [ds_3gpp_bearer_context.c   5499] Allocating LTE eps bearer context
+                12:10:54.653 DS 3GPP/High [ds_3gpp_bearer_context.c   5512] Allocating WCDMA umts bearer context
+        3,
+        12:10:54.654 DS 3GPP/High [ds_3gpp_pdn_context.c  12750] Allocated Flow Manager and bearer Flow Manager
+        12:10:54.654 DS 3GPP/High [ds_3gpp_flow_manager.c  12671] binding flow to phys link for V6 IFACE [0x8004:1]
+        12:10:54.654 DS 3GPP/High [ds_3gpp_pdn_context.c  12809] iface up cmd hdlr PDN cntx Iface:0xc1cc7f70 :info:0
+        
+        4,ps_phys_link_up_cmd -> 通过 phys_link_up_cmd_f_ptr 进入 ds_3gpp_bearer_context.c ds_bearer_cntxt_phys_link_up，将 DS_CMD_3GPP_PHYS_LINK_UP 放入堆栈
+        12:10:54.654 DS 3GPP/High [ds_3gpp_bearer_context.c   2635] DSUMTSPS PHYS LINK up cmd Bearer Inst:0
+
+//处理 DS_CMD_3GPP_PHYS_LINK_UP 进入 ds_bearer_cntxt_phys_link_up_cmd_hdlr
+12:10:54.656 DS 3GPP/Medium [ds_3gpp_bearer_context.c   4901] ds_bearer_cntxt_processPSCmd: received 1182 (DS_CMD_3GPP_PHYS_LINK_UP)
+12:10:54.656 DS 3GPP/High [ds_3gpp_bearer_context.c   4074] PHYS LINK UP CMD HDLR. Bearer state: 0, Bearer instance 0
+    1， ds_3gpp_bearer_cntxt_invoke_bearer_bringup ->  ds_pdn_cntxt_use_default_dial_string 
+    12:10:54.656 DS 3GPP/Medium [ds_3gpp_pdn_context.c  18358] Using Default Dail str 1
+    
+    2, ds_3gpp_bearer_cntxt_invoke_bearer_bringup -> ds_bearer_cntxt_bring_up -> bring_up -> ds_eps_bearer_cntxt_bring_up_pdn_connection -> ds3g_msh_initiate_pdn_connection_ex
+    12:10:54.657 DS 3G Manager/High [ds3gmshif.c   1741] Initiate PDN connectivity request
+    12:10:54.657 DS 3G Manager/High [ds3gmshif.c   1778] PDN CONN REQ Seq Num sent out is 1, subs_id:0
+        i:PDN connectivity request parameters are sent to CM,
+        通过  hdlr_tbl_ptr->originate_call_handler_ext 调用 ds_3gpp_hdlr.c 中的 ds3gpp_orig_call_hdlr_ext -> ds_pdn_cntxt_get_orig_params -> getOrigParams -> 进入Ds_eps_pdn_context.c 中的 ds_eps_pdn_cntxt_get_orig_params
+         12:10:54.657 DS LTE/High [ds_eps_pdn_context.c   4349] Setting request type to 1
+
+            a,继续调用 ds_eps_pdn_cntxt_fillOrigParams ,添加原始参数
+            12:10:54.657 DS LTE/High [ds_eps_pdn_context.c   1037] Fill PPP params from Profile
+            12:10:54.657 DS LTE/High [ds_eps_pdn_context.c    922] IPCP DNS options P:0 S:0
+            12:10:54.657 DS 3GPP/High [ds_3gpp_pdn_context.c   1193] Fill OPER PCO params Mcc: 311 Mnc: 480 Operator Reserved Pco 65280
+            12:10:54.657 DS 3GPP/High [ds_3gpp_pdn_context.c  17940] APM response to MANDATORY_PCSCF_REQ is 0
+            12:10:54.657 DS 3GPP/High [ds_3gpp_pdn_context.c   2225] Filling addr alloc via NAS in PDP ctx req
+            12:10:54.657 DS 3GPP/High [ds_3gpp_pdn_context.c   2550] Filling BCM container in PDP ctx req
+            12:10:54.657 DS 3GPP/High [ds_3gpp_pdn_context.c   2350] Filling IPV4/IPV6 Link MTU container in PDP ctx req
+
+        ii:ds3g_msh_initiate_pdn_connection_ex 调用 cm_mm_call_cmd_pdn_connectivity_req 将参数 send to cm
+        12:10:54.657  Call Manager/Medium [cm.c   4604] =CM= cm_mm_call_cmd_pdn_connectivity_req(), lps = 0
+        12:10:54.657 DS 3G Manager/High [ds3gmshif.c   1806] Call origination with SDF_ID 0
+
+
+二，Act bearer request
+同上1-3，在第3步中进入 ds3gpp_eps_bearer_activte_ind_hdlr

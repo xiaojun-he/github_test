@@ -1,0 +1,62 @@
+Diffie-Hellman Group:
+Values: Group 1 (768-bit)  --> modp768
+Values: Group 2 (1024-bit) --> modp1024
+Values: Group 5 (1536-bit) --> modp1536
+Values: Group 14           --> modp2048
+Values: Group 15           --> modp3072
+Values: Group 16           --> modp4096
+Values: Group 17           --> modp6144
+Values: Group 18           --> modp8192 
+
+Pseudo Random Function:
+Values: PRF-HMAC-SHA1-->prfsha1
+Values: PRF-HMAC-MD5-->prfmd5
+Values: AES-XCBC-PRF-128-->prfaesxcbc
+Values: PRF-SHA-256-->prfsha256
+Values: PRF-SHA-384-->prfsha384
+Values: PRF-SHA-512-->prfsha512
+
+Encryption:
+Values: DES-CBC<=>des
+Values: 3DES-CBC<=>3des
+Values: AES-CBC-128<=>aes128
+Values: AES-CTR-128<=>aes128ctr
+Values: AES-CBC-192<=>aes192
+Values: AES-CTR-192<=>aes192ctr
+Values: AES-CBC-256<=>aes256
+Values: AES-CTR-256<=>aes256ctr
+
+integrity :
+Values: NULL<=>null
+Values: HMAC-SHA1-96<=>sha1
+Values: HMAC-SHA2-256<=>sha256
+Values: HMAC-SHA2-384<=>sha384
+Values: HMAC-SHA2-512<=>sha512
+Values: HMAC-MD5-96<=>md5
+Values: AES-XCBC-96<=>aesxcbc
+
+
+Encryption Algorithm (ENCR) 1 IKE and ESP
+Pseudorandom Function (PRF) 2 IKE
+Integrity Algorithm (INTEG) 3 IKE*, AH, optional in ESP
+Diffie-Hellman group (D-H) 4 IKE, optional in AH & ESP
+Extended Sequence Numbers (ESN) 5 AH and ESP
+
+ESP generally has three: ESN, an encryption algorithm, and an integrity check algorithm. 
+IKE generally has four transforms: a Diffie-Hellman group, an integrity check algorithm, a PRF algorithm,and an encryption algorithm.
+
+
+
+Internet Key Exchange Protocol Version 2 (IKEv2)
+1,IKE is a component of IPsec used for performing mutual authentication and establishing and maintaining Security Associations (SAs)
+2,IP Security (IPsec) provides confidentiality, data integrity, access control, and data source authentication to IP datagrams.
+3,IKE performs mutual authentication between two parties and establishes an IKE Security Association (SA) that includes shared secret information 
+that can be used to efficiently establish SAs for Encapsulating Security Payload (ESP) [ESP] or Authentication Header (AH) [AH] and a set of 
+cryptographic algorithms to be used by the SAs to protect the traffic that they carry.
+4,IKE_SA_INIT, negotiates security parameters for the IKE SA, sends nonces, and sends Diffie-Hellman values.
+  IKE_SA_INIT, negotiate cryptographic algorithms, exchange nonces, and do a Diffie-Hellman exchange [DH].
+5,IKE_AUTH, transmits identities, proves knowledge of the secrets corresponding to the two identities, and sets up an SA for the first (and often only) AH or ESP Child SA
+  IKE_AUTH, authenticate the previous messages, exchange identities and certificates, and establish the first Child SA.
+6,CREATE_CHILD_SA (which creates a Child SA)
+7,INFORMATIONAL (which deletes an SA, reports error conditions, or does other housekeeping)
+8,An INFORMATIONAL request with no payloads (other than the empty Encrypted payload required by the syntax) is commonly used as a check for liveness.
